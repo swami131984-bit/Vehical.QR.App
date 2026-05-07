@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>FleetQR Pro | Smart Vehicle Stickers</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
@@ -12,25 +12,20 @@
       padding: 0;
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Inter', sans-serif;
       background: radial-gradient(circle at 10% 20%, #0f172a, #0a0f1c);
       min-height: 100vh;
       padding: 2rem;
     }
-
     .container {
       max-width: 1300px;
       margin: 0 auto;
     }
-
-    /* header */
     .hero {
       text-align: center;
       margin-bottom: 3rem;
     }
-
     .hero h1 {
       font-size: 2.8rem;
       background: linear-gradient(135deg, #c084fc, #60a5fa);
@@ -39,21 +34,16 @@
       color: transparent;
       letter-spacing: -0.5px;
     }
-
     .hero p {
       color: #94a3b8;
       font-size: 1.1rem;
       margin-top: 0.5rem;
     }
-
-    /* two columns */
     .dashboard {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 2rem;
     }
-
-    /* glass cards */
     .card {
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(16px);
@@ -62,12 +52,10 @@
       padding: 2rem;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
     .card:hover {
       transform: translateY(-5px);
       box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.4);
     }
-
     .card-title {
       font-size: 1.5rem;
       font-weight: 600;
@@ -79,18 +67,15 @@
       padding-left: 1rem;
       color: white;
     }
-
     .form-group {
       margin-bottom: 1.5rem;
     }
-
     label {
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
       color: #cbd5e1;
     }
-
     input {
       width: 100%;
       padding: 1rem;
@@ -101,13 +86,11 @@
       font-size: 1rem;
       transition: all 0.2s;
     }
-
     input:focus {
       outline: none;
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
     }
-
     button {
       background: linear-gradient(95deg, #3b82f6, #8b5cf6);
       width: 100%;
@@ -124,12 +107,10 @@
       justify-content: center;
       gap: 0.5rem;
     }
-
     button:hover {
       transform: scale(1.02);
       box-shadow: 0 10px 20px -5px #3b82f6;
     }
-
     .qr-result {
       background: #0f172a;
       border-radius: 1.5rem;
@@ -138,7 +119,6 @@
       text-align: center;
       border: 1px solid #2d3748;
     }
-
     .qr-code {
       background: white;
       padding: 1rem;
@@ -146,31 +126,26 @@
       display: inline-block;
       margin: 1rem 0;
     }
-
     .qr-actions {
       display: flex;
       gap: 1rem;
       justify-content: center;
       margin-top: 1rem;
     }
-
     .qr-actions button {
       width: auto;
       background: #1e293b;
       padding: 0.6rem 1.2rem;
     }
-
     .qr-actions button:hover {
       background: #334155;
       transform: none;
     }
-
     .vehicle-list {
       max-height: 500px;
       overflow-y: auto;
       padding-right: 0.5rem;
     }
-
     .vehicle-item {
       background: #0f172a;
       border-radius: 1.2rem;
@@ -182,22 +157,18 @@
       border: 1px solid #1e293b;
       transition: 0.2s;
     }
-
     .vehicle-item:hover {
       background: #1e293b;
       border-color: #3b82f6;
     }
-
     .vehicle-info h4 {
       color: white;
       font-weight: 600;
     }
-
     .vehicle-info p {
       font-size: 0.8rem;
       color: #94a3b8;
     }
-
     .btn-icon {
       background: none;
       color: #94a3b8;
@@ -207,13 +178,11 @@
       width: auto;
       cursor: pointer;
     }
-
     .btn-icon:hover {
       color: #60a5fa;
       border-color: #60a5fa;
       transform: none;
     }
-
     .toast {
       position: fixed;
       bottom: 2rem;
@@ -227,17 +196,10 @@
       transition: 0.3s;
       z-index: 1000;
     }
-
     @media (max-width: 800px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-      body {
-        padding: 1rem;
-      }
-      .hero h1 {
-        font-size: 2rem;
-      }
+      .dashboard { grid-template-columns: 1fr; }
+      body { padding: 1rem; }
+      .hero h1 { font-size: 2rem; }
     }
   </style>
 </head>
@@ -248,7 +210,6 @@
     <p>Generate smart stickers – scan, call, track</p>
   </div>
   <div class="dashboard">
-    <!-- left: generator -->
     <div class="card">
       <div class="card-title"><i class="fas fa-plus-circle"></i> New Sticker</div>
       <div class="form-group">
@@ -274,7 +235,6 @@
         <p style="font-size:0.8rem; margin-top:12px"><i class="fas fa-shield-alt"></i> Waterproof ready • High resolution</p>
       </div>
     </div>
-    <!-- right: vehicle gallery -->
     <div class="card">
       <div class="card-title"><i class="fas fa-list-ul"></i> Active Stickers</div>
       <div id="vehicleList" class="vehicle-list">
