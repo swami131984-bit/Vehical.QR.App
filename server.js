@@ -1,67 +1,105 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static(__dirname)); // serves static files like admin.html
+app.use(express.static(__dirname));
 
-// In-memory storage (reset each deploy)
-let vehicles = [];
-let nextId = 1;
+// ---------- MongoDB Connection ----------
+const mongoURI = process.env.MONGO_URI;
+if (!mongoURI) {
+    console.error('❌ FATAL: MONGO_URI environment variable is not set.');
+    process.exit(1);
+}
 
-// ========== API ROUTES ==========
+mongoose.connect(mongoURI)
+    .then(() => console.log('✅ Successfully connected to MongoDB Atlas.'))
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err);
+        process.exit(1);
+    });
 
-// Generate QR code
-app.post('/api/generate', (req, res) => {
-  try {
-    const { vehicleNumber, ownerName, phoneNumber } = req.body;
-    if (!vehicleNumber || !ownerName || !phoneNumber) {
-      return res.status(400).json({ error: 'Missing required fields' });
+// ---------- Mongoose Schema & Model ----------
+const vehicleSchema = new mongoose.Schema({
+    vehicleNumber: { type: String, required: true },
+    ownerName: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    qrData: { type: String, required: true, unique: true },
+    qrUrl: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Vehicle = mongoose.model('Vehicle', vehicleSchema);
+
+// ---------- API Routes ----------
+
+// Generate QR code (saves to database)
+app.post('/api/generate', async (req, res) => {
+    try {
+        const { vehicleNumber, ownerName, phoneNumber } = req.body;
+        if (!vehicleNumber || !ownerName || !phoneNumber) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        const qrData = `VEHICLE_${vehicleNumber}_${Date.now()}`;
+        const host = req.get('host');
+        const qrUrl = `https://${host}/vehicle/${qrData}`;
+
+        const newVehicle = new Vehicle({
+            vehicleNumber,
+            ownerName,
+            phoneNumber,
+            qrData,
+            qrUrl
+        });
+        await newVehicle.save();
+
+        res.json({ success: true, qrData, qrUrl });
+    } catch (err) {
+        console.error('Generate error:', err);
+        if (err.code === 11000) {
+            return res.status(400).json({ error: 'Duplicate QR data, please try again.' });
+        }
+        res.status(500).json({ error: 'Internal server error' });
     }
-    const qrData = `VEHICLE_${vehicleNumber}_${Date.now()}`;
-    const host = req.get('host');
-    const qrUrl = `https://${host}/vehicle/${qrData}`;
-    const newVehicle = {
-      id: nextId++,
-      vehicleNumber,
-      ownerName,
-      phoneNumber,
-      qrData,
-      qrUrl,
-      createdAt: new Date()
-    };
-    vehicles.push(newVehicle);
-    res.json({ success: true, qrData, qrUrl });
-  } catch (err) {
-    console.error('Generate error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
-// List all vehicles
-app.get('/api/vehicles', (req, res) => {
-  res.json(vehicles);
+// List all vehicles (from database)
+app.get('/api/vehicles', async (req, res) => {
+    try {
+        const vehicles = await Vehicle.find().sort({ createdAt: -1 });
+        res.json(vehicles);
+    } catch (err) {
+        console.error('Fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch vehicles' });
+    }
 });
 
-// ========== QR SCAN PAGE (elegant) ==========
-app.get('/vehicle/:qrid', (req, res) => {
-  const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
-  if (!vehicle) {
-    return res.status(404).send(`
-      <!DOCTYPE html>
-      <html>
-      <head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not Found</title>
-      <style>body{font-family:Arial;text-align:center;padding:50px;background:#0f172a;color:white}</style>
-      </head>
-      <body><h1>❌ Vehicle not found</h1><p>This QR code is invalid or has been removed.</p></body>
-      </html>
-    `);
-  }
+// QR scan page (finds vehicle by qrData)
+app.get('/vehicle/:qrid', async (req, res) => {
+    try {
+        const vehicle = await Vehicle.findOne({ qrData: req.params.qrid });
+        if (!vehicle) {
+            return res.status(404).send('Vehicle not found');
+        }
 
-  // Elegant scan page HTML
-  const scanHtml = `<!DOCTYPE html>
+        // Helper to escape HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Elegant scan page HTML
+        res.send(`
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -118,34 +156,24 @@ app.get('/vehicle/:qrid', (req, res) => {
     </div>
   </div>
 </body>
-</html>`;
-  res.send(scanHtml);
+</html>
+        `);
+    } catch (err) {
+        console.error('Scan error:', err);
+        res.status(500).send('Server error');
+    }
 });
 
-// Helper to escape HTML
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
-}
-
-// ========== FRONTEND ROUTES ==========
 // Serve admin.html at root
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
-
-// Explicit route for admin.html
 app.get('/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// ========== START SERVER ==========
+// ---------- Start Server ----------
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`👉 Open https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}`);
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`👉 Open https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}`);
 });
