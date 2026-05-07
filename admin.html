@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin</title><style>body{font-family:Arial;padding:20px;max-width:500px;margin:auto}.card{background:white;border-radius:20px;padding:20px}input,button{width:100%;padding:12px;margin:8px 0}button{background:#1E40AF;color:white}</style></head>
+<body>
+<div class="card"><h1>🚗 Generate QR</h1><input id="vehicle" placeholder="Vehicle Number"><br><input id="owner" placeholder="Owner Name"><br><input id="phone" placeholder="Phone Number"><br><button onclick="generate()">Generate QR</button><div id="result" style="display:none;text-align:center"><h3>✅ QR Ready!</h3><div id="qrImage"></div><a id="downloadLink" download="qr.png">Download PNG</a></div></div>
+<script>async function generate(){const v=document.getElementById('vehicle').value,o=document.getElementById('owner').value,p=document.getElementById('phone').value;if(!v||!o||!p)return alert('Fill all fields');const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vehicleNumber:v,ownerName:o,phoneNumber:p})}),d=await r.json();if(d.success){const u=d.qrUrl,i=`https://quickchart.io/qr?text=${encodeURIComponent(u)}&size=200`;document.getElementById('qrImage').innerHTML=`<img src="${i}" id="qrImg">`;document.getElementById('downloadLink').href=i;document.getElementById('result').style.display='block';}else alert('Error');}</script>
+</body>
+</html>
