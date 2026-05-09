@@ -2,25 +2,189 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FleetQR Pro – Admin Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body{font-family:'Inter',sans-serif;background:radial-gradient(circle at 10% 20%,#0f172a,#0a0f1c);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
-        .card{background:rgba(15,23,42,0.7);backdrop-filter:blur(16px);border-radius:2rem;padding:2rem;max-width:450px;width:100%;}
-        h1{text-align:center;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;}
-        input{width:100%;padding:1rem;background:#0f172a;border:1px solid #334155;border-radius:1rem;color:white;margin:1rem 0;}
-        button{width:100%;background:linear-gradient(95deg,#3b82f6,#8b5cf6);padding:1rem;border:none;border-radius:1.5rem;font-weight:600;color:white;cursor:pointer;}
-        .error{color:#f87171;margin-top:1rem;text-align:center;}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 20%, #0f172a, #0a0f1c);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+        }
+        /* Animated background elements */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(96, 165, 250, 0.1);
+            border-radius: 50%;
+            top: -150px;
+            left: -150px;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 50%;
+            bottom: -200px;
+            right: -200px;
+        }
+        .card {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.5rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo i {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .input-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 1.2rem;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        input::placeholder {
+            color: #64748b;
+        }
+        button {
+            width: 100%;
+            background: linear-gradient(95deg, #3b82f6, #8b5cf6);
+            padding: 1rem;
+            border: none;
+            border-radius: 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px -5px #3b82f6;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error {
+            color: #f87171;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .footer-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+            color: #475569;
+        }
+        .footer-text i {
+            margin-right: 0.3rem;
+        }
+        @media (max-width: 500px) {
+            .card { padding: 1.5rem; }
+            h1 { font-size: 1.5rem; }
+        }
     </style>
 </head>
 <body>
 <div class="card">
-    <h1>🔐 FleetQR Pro Admin</h1>
-    <input type="password" id="adminPassword" placeholder="Admin password" autocomplete="current-password">
-    <input type="text" id="code2fa" placeholder="2FA code (second password)">
-    <button onclick="login()">Login</button>
+    <div class="logo">
+        <i class="fas fa-qrcode"></i>
+    </div>
+    <h1>FleetQR Pro</h1>
+    <div class="subtitle">Secure admin access</div>
+    
+    <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="adminPassword" placeholder="Admin password" autocomplete="current-password">
+    </div>
+    <div class="input-group">
+        <i class="fas fa-shield-alt"></i>
+        <input type="text" id="code2fa" placeholder="2FA verification code">
+    </div>
+    
+    <button onclick="login()">Login <i class="fas fa-arrow-right"></i></button>
     <div id="errorMsg" class="error"></div>
+    <div class="footer-text">
+        <i class="fas fa-shield-alt"></i> Two-factor authentication enabled
+    </div>
 </div>
 
 <script>
@@ -28,13 +192,17 @@
         const password = document.getElementById('adminPassword').value;
         const code2fa = document.getElementById('code2fa').value;
         const errorDiv = document.getElementById('errorMsg');
+        
         if (!password || !code2fa) {
-            errorDiv.innerText = 'Both password and 2FA code required';
+            errorDiv.innerText = 'Both password and 2FA code are required';
             return;
         }
+        errorDiv.innerText = '';
+        
         const btn = event.target;
         btn.disabled = true;
-        btn.innerText = 'Logging in...';
+        btn.innerHTML = 'Verifying <i class="fas fa-spinner fa-pulse"></i>';
+        
         try {
             const res = await fetch('/api/admin-login', {
                 method: 'POST',
@@ -46,14 +214,14 @@
                 localStorage.setItem('admin_token', data.token);
                 window.location.href = '/admin.html';
             } else {
-                errorDiv.innerText = data.error || 'Login failed';
+                errorDiv.innerText = data.error || 'Invalid credentials';
                 btn.disabled = false;
-                btn.innerText = 'Login';
+                btn.innerHTML = 'Login <i class="fas fa-arrow-right"></i>';
             }
         } catch (err) {
-            errorDiv.innerText = 'Network error';
+            errorDiv.innerText = 'Network error. Please try again.';
             btn.disabled = false;
-            btn.innerText = 'Login';
+            btn.innerHTML = 'Login <i class="fas fa-arrow-right"></i>';
         }
     }
 </script>
