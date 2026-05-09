@@ -39,6 +39,7 @@ function filterVehicles(vehiclesArray, searchTerm) {
     );
 }
 
+// API: get vehicles with pagination and search
 app.get('/api/vehicles', (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -57,6 +58,7 @@ app.get('/api/vehicles', (req, res) => {
     });
 });
 
+// Statistics (total & today)
 app.get('/api/stats', (req, res) => {
     const total = vehicles.length;
     const today = new Date();
@@ -69,6 +71,7 @@ app.get('/api/stats', (req, res) => {
     res.json({ total, createdToday });
 });
 
+// Generate QR code
 app.post('/api/generate', (req, res) => {
     try {
         const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
@@ -100,6 +103,7 @@ app.post('/api/generate', (req, res) => {
     }
 });
 
+// Update vehicle
 app.put('/api/vehicles/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -121,6 +125,7 @@ app.put('/api/vehicles/:id', (req, res) => {
     }
 });
 
+// Delete vehicle
 app.delete('/api/vehicles/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -166,7 +171,7 @@ app.post('/api/send-message', async (req, res) => {
     }
 });
 
-// ---------- QR scan page (fixed support button, no issued date, anonymous messaging) ----------
+// ---------- QR scan page (anonymous messaging, no phone numbers) ----------
 app.get('/vehicle/:qrid', (req, res) => {
     const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
     if (!vehicle) {
@@ -190,24 +195,11 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a,#0
 .badge{background:#3b82f6;padding:0.25rem 1rem;border-radius:2rem;font-size:0.75rem;font-weight:600;display:inline-block;}
 h1{font-size:1.8rem;color:white;margin:0.5rem 0 0.25rem;}
 .owner{color:#94a3b8;margin-bottom:1.5rem;border-left:3px solid #3b82f6;padding-left:0.75rem;}
-.support-btn {
-    background: #10b981;
-    color: white;
-    border: none;
-    padding: 0.8rem;
-    border-radius: 2rem;
-    font-weight: 600;
-    width: 100%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin: 1rem 0;
-    transition: 0.2s;
-}
-.support-btn:hover { background: #059669; transform: translateY(-2px); }
-.message-form{margin-top:1rem;}
+.info-row{display:flex;padding:0.8rem 0;border-bottom:1px solid #1e293b;}
+.info-icon{width:2rem;color:#60a5fa;}
+.info-label{flex:1;font-weight:500;color:#cbd5e1;}
+.info-value{font-weight:600;color:white;}
+.message-form{margin-top:1.5rem;}
 .message-form textarea, .message-form input{width:100%;padding:0.8rem;border-radius:1rem;background:#0f172a;border:1px solid #334155;color:white;margin:0.5rem 0;font-family:inherit;}
 .message-form button{background:#3b82f6;color:white;border:none;padding:0.8rem;border-radius:2rem;cursor:pointer;width:100%;font-weight:600;}
 .message-form button:hover{background:#2563eb;}
@@ -221,11 +213,7 @@ h1{font-size:1.8rem;color:white;margin:0.5rem 0 0.25rem;}
 <span class="badge"><i class="fas fa-qrcode"></i> Digital Passport</span>
 <h1>${escapeHtml(vehicle.vehicleNumber)}</h1>
 <div class="owner"><i class="fas fa-user-circle"></i> ${escapeHtml(vehicle.ownerName)}</div>
-
-<!-- Fixed customer support button – change the phone number below -->
-<button class="support-btn" onclick="window.location.href='tel:+1234567890'">
-    <i class="fas fa-headset"></i> Call Customer Support
-</button>
+<div class="info-row"><div class="info-icon"><i class="fas fa-calendar-alt"></i></div><div class="info-label">Issued</div><div class="info-value">${new Date(vehicle.createdAt).toLocaleDateString()}</div></div>
 
 <div class="message-form">
     <p><i class="fas fa-envelope"></i> Send a private message to the owner</p>
