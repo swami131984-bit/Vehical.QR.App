@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Simple admin login (single user)
+// Single admin login
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 app.post('/api/admin-login', (req, res) => {
     const { password } = req.body;
@@ -19,83 +19,95 @@ app.post('/api/admin-login', (req, res) => {
     }
 });
 
-// In-memory storage (reset each deploy)
+// In-memory storage
 let vehicles = [];
 let nextId = 1;
 
-// ========== API ROUTES ==========
+// -------------------- API ROUTES --------------------
 
-// Generate QR code (with country code + phone number)
+// Generate QR code (with country code + local number)
 app.post('/api/generate', (req, res) => {
-  try {
-    const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
-    if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    try {
+        const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
+        if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+        const qrData = `VEHICLE_${vehicleNumber}_${Date.now()}`;
+        const host = req.get('host');
+        const qrUrl = `https://${host}/vehicle/${qrData}`;
+        const newVehicle = {
+            id: nextId++,
+            vehicleNumber,
+            ownerName,
+            countryCode,
+            phoneNumber,
+            fullPhoneNumber,
+            qrData,
+            qrUrl,
+            createdAt: new Date()
+        };
+        vehicles.push(newVehicle);
+        res.json({ success: true, qrData, qrUrl });
+    } catch (err) {
+        console.error('Generate error:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
-    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-    const qrData = `VEHICLE_${vehicleNumber}_${Date.now()}`;
-    const host = req.get('host');
-    const qrUrl = `https://${host}/vehicle/${qrData}`;
-    const newVehicle = {
-      id: nextId++,
-      vehicleNumber,
-      ownerName,
-      phoneNumber,        // store local part only
-      countryCode,        // store country code separately
-      fullPhoneNumber,    // combined for convenience
-      qrData,
-      qrUrl,
-      createdAt: new Date()
-    };
-    vehicles.push(newVehicle);
-    res.json({ success: true, qrData, qrUrl });
-  } catch (err) {
-    console.error('Generate error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
-// List all vehicles with pagination
+// List vehicles with pagination
 app.get('/api/vehicles', (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const start = (page - 1) * limit;
-  const end = start + limit;
-  const paginatedVehicles = vehicles.slice(start, end);
-  res.json({
-    vehicles: paginatedVehicles,
-    total: vehicles.length,
-    page,
-    totalPages: Math.ceil(vehicles.length / limit)
-  });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const paginatedVehicles = vehicles.slice(start, end);
+    res.json({
+        vehicles: paginatedVehicles,
+        total: vehicles.length,
+        page,
+        totalPages: Math.ceil(vehicles.length / limit)
+    });
 });
 
-// UPDATE vehicle by id (edit)
+// Statistics
+app.get('/api/stats', (req, res) => {
+    const total = vehicles.length;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const createdToday = vehicles.filter(v => {
+        const createdAt = new Date(v.createdAt);
+        createdAt.setHours(0, 0, 0, 0);
+        return createdAt.getTime() === today.getTime();
+    }).length;
+    res.json({ total, createdToday });
+});
+
+// Update vehicle (edit)
 app.put('/api/vehicles/:id', (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
-    const index = vehicles.findIndex(v => v.id === id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Vehicle not found' });
+    try {
+        const id = parseInt(req.params.id);
+        const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
+        const index = vehicles.findIndex(v => v.id === id);
+        if (index === -1) {
+            return res.status(404).json({ error: 'Vehicle not found' });
+        }
+        vehicles[index] = {
+            ...vehicles[index],
+            vehicleNumber,
+            ownerName,
+            countryCode,
+            phoneNumber,
+            fullPhoneNumber: `${countryCode}${phoneNumber}`
+        };
+        res.json({ success: true, vehicle: vehicles[index] });
+    } catch (err) {
+        console.error('Update error:', err);
+        res.status(500).json({ error: 'Update failed' });
     }
-    // Update fields, keep QR data unchanged
-    vehicles[index] = {
-      ...vehicles[index],
-      vehicleNumber,
-      ownerName,
-      countryCode,
-      phoneNumber,
-      fullPhoneNumber: `${countryCode}${phoneNumber}`
-    };
-    res.json({ success: true, vehicle: vehicles[index] });
-  } catch (err) {
-    console.error('Update error:', err);
-    res.status(500).json({ error: 'Update failed' });
-  }
 });
 
-// DELETE vehicle by id
+// Delete vehicle
 app.delete('/api/vehicles/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -111,23 +123,22 @@ app.delete('/api/vehicles/:id', (req, res) => {
     }
 });
 
-// ========== QR SCAN PAGE ==========
+// -------------------- QR SCAN PAGE --------------------
 app.get('/vehicle/:qrid', (req, res) => {
-  const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
-  if (!vehicle) {
-    return res.status(404).send(`
-      <!DOCTYPE html>
-      <html>
-      <head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not Found</title>
-      <style>body{font-family:Arial;text-align:center;padding:50px;background:#0f172a;color:white}</style>
-      </head>
-      <body><h1>❌ Vehicle not found</h1><p>This QR code is invalid or has been removed.</p></body>
-      </html>
-    `);
-  }
-
-  const fullNumber = vehicle.fullPhoneNumber || `${vehicle.countryCode}${vehicle.phoneNumber}`;
-  const scanHtml = `<!DOCTYPE html>
+    const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
+    if (!vehicle) {
+        return res.status(404).send(`
+            <!DOCTYPE html>
+            <html>
+            <head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not Found</title>
+            <style>body{font-family:Arial;text-align:center;padding:50px;background:#0f172a;color:white}</style>
+            </head>
+            <body><h1>❌ Vehicle not found</h1><p>This QR code is invalid or has been removed.</p></body>
+            </html>
+        `);
+    }
+    const fullNumber = vehicle.fullPhoneNumber || `${vehicle.countryCode}${vehicle.phoneNumber}`;
+    const scanHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -185,28 +196,26 @@ app.get('/vehicle/:qrid', (req, res) => {
   </div>
 </body>
 </html>`;
-  res.send(scanHtml);
+    res.send(scanHtml);
 });
 
 function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
-// ========== FRONTEND ROUTES ==========
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
-});
-app.get('/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
-});
+// -------------------- FRONTEND ROUTES --------------------
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
+app.get('/admin.html', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
+app.get('/login.html', (req, res) => { res.sendFile(path.join(__dirname, 'login.html')); });
 
+// Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`👉 Open https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}`);
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`👉 Open https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}`);
 });
