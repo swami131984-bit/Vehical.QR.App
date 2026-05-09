@@ -1,65 +1,32 @@
 const express = require('express');
 const path = require('path');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer'); // temporarily disabled
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// ---------- Email 2FA storage ----------
-const codeStore = new Map();
+// ---------- Email 2FA storage (disabled) ----------
+// const codeStore = new Map();
 
-// ---------- Email transporter ----------
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+// ---------- Email transporter (disabled) ----------
+// const transporter = nodemailer.createTransport({...});
 
-// ---------- Admin login (step 1: send code) ----------
+// ---------- Admin login (skip email, issue token directly) ----------
 app.post('/api/admin-login', async (req, res) => {
     const { password } = req.body;
     if (password !== process.env.ADMIN_PASSWORD) {
         return res.status(401).json({ error: 'Invalid password' });
     }
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (!adminEmail) {
-        return res.status(500).json({ error: 'Admin email not set' });
-    }
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000;
-    codeStore.set(adminEmail, { code, expiresAt });
-    try {
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: adminEmail,
-            subject: 'FleetQR Pro – Login Code',
-            html: `<p>Your verification code is: <strong>${code}</strong></p><p>Valid for 5 minutes.</p>`
-        });
-        res.json({ success: true, message: 'Code sent to your email' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to send email' });
-    }
-});
-
-// ---------- Step 2: verify code and issue token ----------
-app.post('/api/verify-code', (req, res) => {
-    const { code } = req.body;
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const record = codeStore.get(adminEmail);
-    if (!record) return res.status(401).json({ error: 'No code requested or expired' });
-    if (Date.now() > record.expiresAt) {
-        codeStore.delete(adminEmail);
-        return res.status(401).json({ error: 'Code expired, login again' });
-    }
-    if (record.code !== code) return res.status(401).json({ error: 'Invalid code' });
-    codeStore.delete(adminEmail);
+    // Temporarily skip email and just issue token
     const token = Buffer.from(Date.now().toString()).toString('base64');
     res.json({ success: true, token });
+});
+
+// ---------- verify-code endpoint (disabled, but kept to avoid 404) ----------
+app.post('/api/verify-code', (req, res) => {
+    res.status(404).json({ error: '2FA temporarily disabled' });
 });
 
 // ---------- In-memory storage ----------
