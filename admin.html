@@ -36,6 +36,15 @@
     .btn-icon { background:none; color:#94a3b8; border:1px solid #334155; border-radius:0.8rem; padding:0.5rem; width:auto; cursor:pointer; }
     .btn-icon:hover { color:#60a5fa; border-color:#60a5fa; transform:none; }
     .toast { position:fixed; bottom:2rem; right:2rem; background:#10b981; padding:0.75rem 1.5rem; border-radius:2rem; color:white; font-weight:500; opacity:0; transition:0.3s; z-index:1000; }
+    .pagination { display:flex; justify-content:center; gap:1rem; margin-top:1rem; align-items:center; }
+    .pagination button { width:auto; padding:0.5rem 1rem; background:#1e293b; }
+    /* Modal styles */
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; z-index:1001; }
+    .modal-content { background:#0f172a; border-radius:2rem; padding:2rem; max-width:500px; width:90%; border:1px solid #334155; }
+    .modal-content h3 { color:white; margin-bottom:1rem; }
+    .modal-content input { margin-bottom:1rem; }
+    .modal-buttons { display:flex; gap:1rem; margin-top:1rem; }
+    .modal-buttons button { margin:0; }
     @media (max-width:800px) { .dashboard { grid-template-columns:1fr; } body { padding:1rem; } .hero h1 { font-size:2rem; } }
   </style>
 </head>
@@ -46,7 +55,7 @@
     <p>Generate smart stickers – scan, call, track</p>
   </div>
   <div class="dashboard">
-    <!-- Left: QR Generator -->
+    <!-- Left: QR Generator (unchanged) -->
     <div class="card">
       <div class="card-title"><i class="fas fa-plus-circle"></i> New Sticker</div>
       <div class="form-group">
@@ -73,7 +82,7 @@
       </div>
     </div>
 
-    <!-- Right: Vehicle Gallery with Export CSV, Logout, and Delete buttons -->
+    <!-- Right: Vehicle Gallery with Export, Pagination, Edit, Delete -->
     <div class="card">
       <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
         <span><i class="fas fa-list-ul"></i> Active Stickers</span>
@@ -82,6 +91,12 @@
       <div id="vehicleList" class="vehicle-list">
         <div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-spinner fa-pulse"></i> Loading fleet...</div>
       </div>
+      <!-- Pagination controls -->
+      <div class="pagination" id="paginationControls" style="display:none;">
+        <button id="prevPageBtn"><i class="fas fa-chevron-left"></i> Previous</button>
+        <span id="pageInfo" style="color:#cbd5e1;">Page 1 / 1</span>
+        <button id="nextPageBtn">Next <i class="fas fa-chevron-right"></i></button>
+      </div>
       <!-- Logout button -->
       <div style="margin-top: 1rem; text-align: right;">
         <button id="logoutBtn" class="btn-icon" style="background: #dc2626; color: white; padding: 0.4rem 1rem; border-radius: 2rem;"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -89,6 +104,21 @@
     </div>
   </div>
 </div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Edit Vehicle</h3>
+    <input type="text" id="editVehicleNumber" placeholder="Vehicle Number">
+    <input type="text" id="editOwnerName" placeholder="Owner Name">
+    <input type="text" id="editPhoneNumber" placeholder="Phone Number">
+    <div class="modal-buttons">
+      <button id="saveEditBtn">Save Changes</button>
+      <button id="cancelEditBtn" style="background:#475569;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast">✨ QR generated!</div>
 
 <script>
@@ -100,34 +130,126 @@
 
   let currentQrUrl = '';
   let currentQrImageSrc = '';
+  let currentPage = 1;
+  let totalPages = 1;
+  let editingVehicleId = null;
 
-  async function loadVehicles() {
+  // Fetch vehicles with pagination
+  async function loadVehicles(page = 1) {
     try {
-      const res = await fetch('/api/vehicles');
-      const vehicles = await res.json();
-      const container = document.getElementById('vehicleList');
-      if (!vehicles.length) {
-        container.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-car-side"></i> No stickers yet.</div>';
-        return;
-      }
-      // Render each vehicle with QR, copy, and delete button
-      container.innerHTML = vehicles.map(v => `
-        <div class="vehicle-item">
-          <div class="vehicle-info">
-            <h4>${escapeHtml(v.vehicleNumber)}</h4>
-            <p>${escapeHtml(v.ownerName)} • ${escapeHtml(v.phoneNumber)}</p>
-            <small>${new Date(v.createdAt).toLocaleDateString()}</small>
-          </div>
-          <div>
-            <button class="btn-icon" onclick="viewQR('${escapeHtml(v.qrUrl)}')" title="Show QR"><i class="fas fa-qrcode"></i></button>
-            <button class="btn-icon" onclick="copyToClipboard('${escapeHtml(v.qrUrl)}')" title="Copy URL"><i class="fas fa-copy"></i></button>
-            <button class="btn-icon" onclick="deleteVehicle(${v.id})" title="Delete" style="color:#ef4444;"><i class="fas fa-trash-alt"></i></button>
-          </div>
-        </div>
-      `).join('');
+      const res = await fetch(`/api/vehicles?page=${page}&limit=10`);
+      const data = await res.json();
+      const vehicles = data.vehicles;
+      totalPages = data.totalPages;
+      currentPage = data.page;
+      renderVehicleList(vehicles);
+      updatePaginationControls();
     } catch(e) { console.error(e); }
   }
 
+  function renderVehicleList(vehicles) {
+    const container = document.getElementById('vehicleList');
+    if (!vehicles || vehicles.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-car-side"></i> No stickers yet.</div>';
+      return;
+    }
+    container.innerHTML = vehicles.map(v => `
+      <div class="vehicle-item">
+        <div class="vehicle-info">
+          <h4>${escapeHtml(v.vehicleNumber)}</h4>
+          <p>${escapeHtml(v.ownerName)} • ${escapeHtml(v.phoneNumber)}</p>
+          <small>${new Date(v.createdAt).toLocaleDateString()}</small>
+        </div>
+        <div>
+          <button class="btn-icon" onclick="viewQR('${escapeHtml(v.qrUrl)}')" title="Show QR"><i class="fas fa-qrcode"></i></button>
+          <button class="btn-icon" onclick="copyToClipboard('${escapeHtml(v.qrUrl)}')" title="Copy URL"><i class="fas fa-copy"></i></button>
+          <button class="btn-icon" onclick="openEditModal(${v.id}, '${escapeHtml(v.vehicleNumber)}', '${escapeHtml(v.ownerName)}', '${escapeHtml(v.phoneNumber)}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+          <button class="btn-icon" onclick="deleteVehicle(${v.id})" title="Delete" style="color:#ef4444;"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updatePaginationControls() {
+    const controls = document.getElementById('paginationControls');
+    const pageInfo = document.getElementById('pageInfo');
+    if (totalPages <= 1) {
+      controls.style.display = 'none';
+      return;
+    }
+    controls.style.display = 'flex';
+    pageInfo.innerText = `Page ${currentPage} / ${totalPages}`;
+    document.getElementById('prevPageBtn').disabled = (currentPage === 1);
+    document.getElementById('nextPageBtn').disabled = (currentPage === totalPages);
+  }
+
+  // Pagination event handlers
+  document.getElementById('prevPageBtn')?.addEventListener('click', () => {
+    if (currentPage > 1) loadVehicles(currentPage - 1);
+  });
+  document.getElementById('nextPageBtn')?.addEventListener('click', () => {
+    if (currentPage < totalPages) loadVehicles(currentPage + 1);
+  });
+
+  // Edit modal
+  function openEditModal(id, vehicleNumber, ownerName, phoneNumber) {
+    editingVehicleId = id;
+    document.getElementById('editVehicleNumber').value = vehicleNumber;
+    document.getElementById('editOwnerName').value = ownerName;
+    document.getElementById('editPhoneNumber').value = phoneNumber;
+    document.getElementById('editModal').style.display = 'flex';
+  }
+
+  async function saveEdit() {
+    const vehicleNumber = document.getElementById('editVehicleNumber').value.trim();
+    const ownerName = document.getElementById('editOwnerName').value.trim();
+    const phoneNumber = document.getElementById('editPhoneNumber').value.trim();
+    if (!vehicleNumber || !ownerName || !phoneNumber) {
+      showToast('All fields required');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/vehicles/${editingVehicleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehicleNumber, ownerName, phoneNumber })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('✅ Vehicle updated');
+        document.getElementById('editModal').style.display = 'none';
+        loadVehicles(currentPage);
+      } else {
+        showToast('Update failed');
+      }
+    } catch(err) {
+      showToast('Network error');
+    }
+  }
+
+  document.getElementById('saveEditBtn')?.addEventListener('click', saveEdit);
+  document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
+    document.getElementById('editModal').style.display = 'none';
+  });
+
+  // Delete vehicle
+  async function deleteVehicle(vehicleId) {
+    if (!confirm('Are you sure? This will permanently remove the sticker and QR data.')) return;
+    try {
+      const res = await fetch(`/api/vehicles/${vehicleId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('🗑️ Vehicle deleted');
+        loadVehicles(currentPage);
+      } else {
+        showToast('Delete failed');
+      }
+    } catch(err) {
+      showToast('Network error');
+    }
+  }
+
+  // Generate QR (unchanged)
   async function generateQR() {
     const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
     const ownerName = document.getElementById('ownerName').value.trim();
@@ -136,11 +258,9 @@
       showToast('Please fill all fields');
       return;
     }
-
     const btn = document.getElementById('generateBtn');
     btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generating...';
     btn.disabled = true;
-
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -157,7 +277,7 @@
         document.getElementById('vehicleNumber').value = '';
         document.getElementById('ownerName').value = '';
         document.getElementById('phoneNumber').value = '';
-        loadVehicles();
+        loadVehicles(currentPage);
       } else {
         showToast('Error: ' + (data.error || 'unknown'));
       }
@@ -209,32 +329,13 @@
     });
   }
 
-  // Delete vehicle function (calls DELETE /api/vehicles/:id)
-  async function deleteVehicle(vehicleId) {
-    if (!confirm('Are you sure? This will permanently remove the sticker and QR data.')) return;
-    try {
-      const res = await fetch(`/api/vehicles/${vehicleId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('🗑️ Vehicle deleted');
-        loadVehicles(); // refresh list
-      } else {
-        showToast('Delete failed');
-      }
-    } catch (err) {
-      showToast('Network error');
-    }
-  }
-
-  // Export to CSV
+  // Export to CSV (unchanged)
   async function exportToCSV() {
     try {
       showToast('📊 Preparing export...');
-      const res = await fetch('/api/vehicles');
-      const vehicles = await res.json();
+      const res = await fetch('/api/vehicles?limit=10000');
+      const data = await res.json();
+      const vehicles = data.vehicles || [];
       if (!vehicles.length) {
         showToast('No vehicles to export');
         return;
@@ -267,13 +368,10 @@
     }
   }
 
-  // Logout function
   function logout() {
     localStorage.removeItem('admin_token');
     showToast('👋 Logged out');
-    setTimeout(() => {
-      window.location.href = '/login.html';
-    }, 500);
+    setTimeout(() => { window.location.href = '/login.html'; }, 500);
   }
 
   // Event listeners
@@ -283,8 +381,7 @@
   document.getElementById('exportBtn').addEventListener('click', exportToCSV);
   document.getElementById('logoutBtn').addEventListener('click', logout);
 
-  loadVehicles();
-  setInterval(loadVehicles, 5000);
+  loadVehicles(1);
 </script>
 </body>
 </html>
