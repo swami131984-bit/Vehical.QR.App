@@ -13,11 +13,6 @@
     .hero{text-align:center;margin-bottom:2rem;}
     .hero h1{font-size:2.8rem;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;}
     .hero p{color:#94a3b8;}
-    .stats{display:flex;gap:1rem;justify-content:center;margin-bottom:2rem;flex-wrap:wrap;}
-    .stat-card{background:rgba(15,23,42,0.6);backdrop-filter:blur(16px);border-radius:1.5rem;padding:1rem 2rem;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:160px;}
-    .stat-card i{font-size:2rem;color:#60a5fa;}
-    .stat-card h3{color:white;font-size:2rem;margin:0.5rem 0;}
-    .stat-card p{color:#94a3b8;}
     .dashboard{display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
     .card{background:rgba(15,23,42,0.6);backdrop-filter:blur(16px);border-radius:2rem;border:1px solid rgba(255,255,255,0.1);padding:2rem;transition:transform 0.2s;}
     .card:hover{transform:translateY(-5px);}
@@ -53,7 +48,13 @@
     .modal-content input,.modal-content select{margin-bottom:1rem;}
     .modal-buttons{display:flex;gap:1rem;margin-top:1rem;}
     .modal-buttons button{margin:0;}
-    @media (max-width:800px){.dashboard{grid-template-columns:1fr;}body{padding:1rem;}.hero h1{font-size:2rem;}.stats{flex-direction:column;align-items:center;}}
+    /* Stats footer – small and elegant */
+    .stats-footer{display:flex;justify-content:center;gap:1rem;margin-top:2rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);}
+    .stat-item{background:rgba(15,23,42,0.4);backdrop-filter:blur(12px);border-radius:1rem;padding:0.5rem 1rem;display:flex;align-items:center;gap:0.75rem;border:1px solid rgba(255,255,255,0.05);}
+    .stat-item i{font-size:1.2rem;color:#60a5fa;}
+    .stat-item span{color:#cbd5e1;font-size:0.8rem;}
+    .stat-item strong{color:white;font-size:1rem;margin-left:0.25rem;}
+    @media (max-width:800px){.dashboard{grid-template-columns:1fr;}body{padding:1rem;}.hero h1{font-size:2rem;}}
   </style>
 </head>
 <body>
@@ -62,12 +63,8 @@
     <h1><i class="fas fa-qrcode"></i> FleetQR Pro</h1>
     <p>Generate, search, edit, and manage QR stickers</p>
   </div>
-  <div class="stats">
-    <div class="stat-card"><i class="fas fa-qrcode"></i><h3 id="totalQrCount">0</h3><p>Total QR Codes</p></div>
-    <div class="stat-card"><i class="fas fa-calendar-day"></i><h3 id="todayQrCount">0</h3><p>Generated Today</p></div>
-  </div>
   <div class="dashboard">
-    <!-- Left: QR Generator -->
+    <!-- Left: QR Generator (unchanged) -->
     <div class="card">
       <div class="card-title"><i class="fas fa-plus-circle"></i> New Sticker</div>
       <div class="form-group"><label><i class="fas fa-car"></i> Vehicle Number</label><input type="text" id="vehicleNumber" placeholder="e.g., MH12AB1234"></div>
@@ -103,6 +100,11 @@
       </div>
       <div style="margin-top:1rem; text-align:right;"><button id="logoutBtn" class="btn-icon" style="background:#dc2626; color:white; padding:0.4rem 1rem; border-radius:2rem;"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
     </div>
+  </div>
+  <!-- Stats footer (small & elegant) -->
+  <div class="stats-footer">
+    <div class="stat-item"><i class="fas fa-qrcode"></i><span>Total QR codes:</span><strong id="totalQrCount">0</strong></div>
+    <div class="stat-item"><i class="fas fa-calendar-day"></i><span>Generated today:</span><strong id="todayQrCount">0</strong></div>
   </div>
 </div>
 <!-- Edit Modal -->
