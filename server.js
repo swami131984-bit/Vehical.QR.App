@@ -25,13 +25,14 @@ let nextId = 1;
 
 // ========== API ROUTES ==========
 
-// Generate QR code
+// Generate QR code (with country code + phone number)
 app.post('/api/generate', (req, res) => {
   try {
-    const { vehicleNumber, ownerName, phoneNumber } = req.body;
-    if (!vehicleNumber || !ownerName || !phoneNumber) {
+    const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
+    if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
     const qrData = `VEHICLE_${vehicleNumber}_${Date.now()}`;
     const host = req.get('host');
     const qrUrl = `https://${host}/vehicle/${qrData}`;
@@ -39,7 +40,9 @@ app.post('/api/generate', (req, res) => {
       id: nextId++,
       vehicleNumber,
       ownerName,
-      phoneNumber,
+      phoneNumber,        // store local part only
+      countryCode,        // store country code separately
+      fullPhoneNumber,    // combined for convenience
       qrData,
       qrUrl,
       createdAt: new Date()
@@ -71,7 +74,7 @@ app.get('/api/vehicles', (req, res) => {
 app.put('/api/vehicles/:id', (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { vehicleNumber, ownerName, phoneNumber } = req.body;
+    const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
     const index = vehicles.findIndex(v => v.id === id);
     if (index === -1) {
       return res.status(404).json({ error: 'Vehicle not found' });
@@ -81,7 +84,9 @@ app.put('/api/vehicles/:id', (req, res) => {
       ...vehicles[index],
       vehicleNumber,
       ownerName,
-      phoneNumber
+      countryCode,
+      phoneNumber,
+      fullPhoneNumber: `${countryCode}${phoneNumber}`
     };
     res.json({ success: true, vehicle: vehicles[index] });
   } catch (err) {
@@ -106,7 +111,7 @@ app.delete('/api/vehicles/:id', (req, res) => {
     }
 });
 
-// ========== QR SCAN PAGE (unchanged) ==========
+// ========== QR SCAN PAGE ==========
 app.get('/vehicle/:qrid', (req, res) => {
   const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
   if (!vehicle) {
@@ -121,6 +126,7 @@ app.get('/vehicle/:qrid', (req, res) => {
     `);
   }
 
+  const fullNumber = vehicle.fullPhoneNumber || `${vehicle.countryCode}${vehicle.phoneNumber}`;
   const scanHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -162,7 +168,7 @@ app.get('/vehicle/:qrid', (req, res) => {
       <div class="info-row">
         <div class="info-icon"><i class="fas fa-phone-alt"></i></div>
         <div class="info-label">Contact</div>
-        <div class="info-value">${escapeHtml(vehicle.phoneNumber)}</div>
+        <div class="info-value">${escapeHtml(fullNumber)}</div>
       </div>
       <div class="info-row">
         <div class="info-icon"><i class="fas fa-calendar-alt"></i></div>
@@ -170,9 +176,9 @@ app.get('/vehicle/:qrid', (req, res) => {
         <div class="info-value">${new Date(vehicle.createdAt).toLocaleDateString()}</div>
       </div>
       <div class="actions">
-        <a href="tel:${escapeHtml(vehicle.phoneNumber)}" class="btn btn-call"><i class="fas fa-phone-alt"></i> Call</a>
-        <a href="sms:${escapeHtml(vehicle.phoneNumber)}" class="btn btn-sms"><i class="fas fa-comment"></i> SMS</a>
-        <a href="https://wa.me/${vehicle.phoneNumber.replace(/[^0-9]/g, '')}" class="btn btn-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+        <a href="tel:${escapeHtml(fullNumber)}" class="btn btn-call"><i class="fas fa-phone-alt"></i> Call</a>
+        <a href="sms:${escapeHtml(fullNumber)}" class="btn btn-sms"><i class="fas fa-comment"></i> SMS</a>
+        <a href="https://wa.me/${fullNumber.replace(/[^0-9]/g, '')}" class="btn btn-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
       </div>
       <div class="footer"><i class="fas fa-shield-alt"></i> Secure QR • Report if found</div>
     </div>
