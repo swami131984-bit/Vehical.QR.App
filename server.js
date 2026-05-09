@@ -1,12 +1,16 @@
 const express = require('express');
 const path = require('path');
+const { Resend } = require('resend');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// ---------- Admin login with static 2FA ----------
+// ---------- Resend setup (for anonymous messages) ----------
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+// ---------- Static 2FA login ----------
 app.post('/api/admin-login', (req, res) => {
     const { password, code2fa } = req.body;
     if (password !== process.env.ADMIN_PASSWORD) {
@@ -20,7 +24,7 @@ app.post('/api/admin-login', (req, res) => {
     res.json({ success: true, token });
 });
 
-// ---------- In-memory storage ----------
+// ---------- In-memory vehicle storage ----------
 let vehicles = [];
 let nextId = 1;
 
@@ -130,6 +134,39 @@ app.delete('/api/vehicles/:id', (req, res) => {
     }
 });
 
+// ---------- Anonymous messaging endpoint ----------
+app.post('/api/send-message', async (req, res) => {
+    const { qrData, message, senderContact } = req.body;
+    const vehicle = vehicles.find(v => v.qrData === qrData);
+    if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
+
+    const ownerEmail = process.env.ADMIN_EMAIL;
+    if (!ownerEmail || !resend) {
+        console.log('Message from scanner:', { vehicle: vehicle.vehicleNumber, message, senderContact });
+        return res.json({ success: true, message: 'Message received (email not configured).' });
+    }
+
+    try {
+        await resend.emails.send({
+            from: 'onboarding@resend.dev',
+            to: ownerEmail,
+            subject: `New message for vehicle ${vehicle.vehicleNumber}`,
+            html: `
+                <h3>New message about vehicle ${vehicle.vehicleNumber}</h3>
+                <p><strong>From:</strong> ${senderContact || 'Anonymous'}</p>
+                <p><strong>Message:</strong></p>
+                <p>${message.replace(/\n/g, '<br>')}</p>
+                <p>You can reply directly to this email if the sender provided their contact info.</p>
+            `
+        });
+        res.json({ success: true, message: 'Your message has been sent to the owner.' });
+    } catch (err) {
+        console.error('Email error:', err);
+        res.status(500).json({ error: 'Failed to send message. Please try later.' });
+    }
+});
+
+// ---------- QR scan page (fixed support button, no issued date, anonymous messaging) ----------
 app.get('/vehicle/:qrid', (req, res) => {
     const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
     if (!vehicle) {
@@ -138,7 +175,6 @@ app.get('/vehicle/:qrid', (req, res) => {
     vehicle.scans = (vehicle.scans || 0) + 1;
     vehicle.lastScannedAt = new Date();
 
-    const fullNumber = vehicle.fullPhoneNumber || `${vehicle.countryCode}${vehicle.phoneNumber}`;
     const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(vehicle.vehicleNumber)} | FleetQR</title>
@@ -154,17 +190,28 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a,#0
 .badge{background:#3b82f6;padding:0.25rem 1rem;border-radius:2rem;font-size:0.75rem;font-weight:600;display:inline-block;}
 h1{font-size:1.8rem;color:white;margin:0.5rem 0 0.25rem;}
 .owner{color:#94a3b8;margin-bottom:1.5rem;border-left:3px solid #3b82f6;padding-left:0.75rem;}
-.info-row{display:flex;padding:0.8rem 0;border-bottom:1px solid #1e293b;}
-.info-icon{width:2rem;color:#60a5fa;}
-.info-label{flex:1;font-weight:500;color:#cbd5e1;}
-.info-value{font-weight:600;color:white;}
-.actions{display:flex;gap:0.8rem;margin:1.5rem 0;}
-.btn{flex:1;padding:0.8rem;border-radius:2rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:0.5rem;text-decoration:none;transition:0.2s;}
-.btn-call{background:#10b981;color:white;}
-.btn-sms{background:#3b82f6;color:white;}
-.btn-wa{background:#25d366;color:white;}
-.btn:hover{transform:translateY(-2px);}
-.footer{text-align:center;font-size:0.7rem;color:#475569;}
+.support-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.8rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    transition: 0.2s;
+}
+.support-btn:hover { background: #059669; transform: translateY(-2px); }
+.message-form{margin-top:1rem;}
+.message-form textarea, .message-form input{width:100%;padding:0.8rem;border-radius:1rem;background:#0f172a;border:1px solid #334155;color:white;margin:0.5rem 0;font-family:inherit;}
+.message-form button{background:#3b82f6;color:white;border:none;padding:0.8rem;border-radius:2rem;cursor:pointer;width:100%;font-weight:600;}
+.message-form button:hover{background:#2563eb;}
+.footer{text-align:center;font-size:0.7rem;color:#475569;margin-top:1rem;}
 </style>
 </head>
 <body>
@@ -174,16 +221,52 @@ h1{font-size:1.8rem;color:white;margin:0.5rem 0 0.25rem;}
 <span class="badge"><i class="fas fa-qrcode"></i> Digital Passport</span>
 <h1>${escapeHtml(vehicle.vehicleNumber)}</h1>
 <div class="owner"><i class="fas fa-user-circle"></i> ${escapeHtml(vehicle.ownerName)}</div>
-<div class="info-row"><div class="info-icon"><i class="fas fa-phone-alt"></i></div><div class="info-label">Contact</div><div class="info-value">${escapeHtml(fullNumber)}</div></div>
-<div class="info-row"><div class="info-icon"><i class="fas fa-calendar-alt"></i></div><div class="info-label">Issued</div><div class="info-value">${new Date(vehicle.createdAt).toLocaleDateString()}</div></div>
-<div class="actions">
-<a href="tel:${escapeHtml(fullNumber)}" class="btn btn-call"><i class="fas fa-phone-alt"></i> Call</a>
-<a href="sms:${escapeHtml(fullNumber)}" class="btn btn-sms"><i class="fas fa-comment"></i> SMS</a>
-<a href="https://wa.me/${fullNumber.replace(/[^0-9]/g, '')}" class="btn btn-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+
+<!-- Fixed customer support button – change the phone number below -->
+<button class="support-btn" onclick="window.location.href='tel:+1234567890'">
+    <i class="fas fa-headset"></i> Call Customer Support
+</button>
+
+<div class="message-form">
+    <p><i class="fas fa-envelope"></i> Send a private message to the owner</p>
+    <textarea id="msg" rows="4" placeholder="Your message..."></textarea>
+    <input type="text" id="contact" placeholder="Your email or phone (optional, for reply)">
+    <button id="sendBtn">Send Message</button>
+    <div id="status" style="margin-top:0.5rem; font-size:0.8rem;"></div>
 </div>
-<div class="footer"><i class="fas fa-shield-alt"></i> Secure QR · Report if found</div>
+<div class="footer"><i class="fas fa-shield-alt"></i> Your contact info stays private</div>
 </div>
 </div>
+<script>
+document.getElementById('sendBtn').addEventListener('click', async () => {
+    const message = document.getElementById('msg').value.trim();
+    const senderContact = document.getElementById('contact').value.trim();
+    if (!message) { alert('Please write a message'); return; }
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true; btn.innerText = 'Sending...';
+    const qrData = window.location.pathname.split('/').pop();
+    try {
+        const res = await fetch('/api/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qrData, message, senderContact })
+        });
+        const data = await res.json();
+        const statusDiv = document.getElementById('status');
+        if (data.success) {
+            statusDiv.innerHTML = '<span style="color:#10b981;">✅ Message sent. The owner may reply if they wish.</span>';
+            document.getElementById('msg').value = '';
+            document.getElementById('contact').value = '';
+        } else {
+            statusDiv.innerHTML = '<span style="color:#f87171;">❌ ' + (data.error || 'Failed') + '</span>';
+        }
+    } catch(err) {
+        document.getElementById('status').innerHTML = '<span style="color:#f87171;">❌ Network error. Try again.</span>';
+    } finally {
+        btn.disabled = false; btn.innerText = 'Send Message';
+    }
+});
+</script>
 </body>
 </html>`;
     res.send(html);
