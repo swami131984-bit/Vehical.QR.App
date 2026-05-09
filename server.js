@@ -1,32 +1,19 @@
 const express = require('express');
 const path = require('path');
-// const nodemailer = require('nodemailer'); // temporarily disabled
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// ---------- Email 2FA storage (disabled) ----------
-// const codeStore = new Map();
-
-// ---------- Email transporter (disabled) ----------
-// const transporter = nodemailer.createTransport({...});
-
-// ---------- Admin login (skip email, issue token directly) ----------
-app.post('/api/admin-login', async (req, res) => {
+// ---------- Admin login (password only, no email) ----------
+app.post('/api/admin-login', (req, res) => {
     const { password } = req.body;
     if (password !== process.env.ADMIN_PASSWORD) {
         return res.status(401).json({ error: 'Invalid password' });
     }
-    // Temporarily skip email and just issue token
     const token = Buffer.from(Date.now().toString()).toString('base64');
     res.json({ success: true, token });
-});
-
-// ---------- verify-code endpoint (disabled, but kept to avoid 404) ----------
-app.post('/api/verify-code', (req, res) => {
-    res.status(404).json({ error: '2FA temporarily disabled' });
 });
 
 // ---------- In-memory storage ----------
