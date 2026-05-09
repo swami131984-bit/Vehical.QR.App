@@ -6,23 +6,24 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Admin login (single password)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+// ---------- Admin login with static 2FA ----------
 app.post('/api/admin-login', (req, res) => {
-    const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
-        const token = Buffer.from(Date.now().toString()).toString('base64');
-        res.json({ success: true, token });
-    } else {
-        res.status(401).json({ error: 'Invalid password' });
+    const { password, code2fa } = req.body;
+    if (password !== process.env.ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Invalid password' });
     }
+    const required2FA = process.env.ADMIN_2FA_CODE;
+    if (required2FA && code2fa !== required2FA) {
+        return res.status(401).json({ error: 'Invalid 2FA code' });
+    }
+    const token = Buffer.from(Date.now().toString()).toString('base64');
+    res.json({ success: true, token });
 });
 
-// In-memory storage with scan counters
+// ---------- In-memory storage ----------
 let vehicles = [];
 let nextId = 1;
 
-// Helper: filter vehicles by search term
 function filterVehicles(vehiclesArray, searchTerm) {
     if (!searchTerm) return vehiclesArray;
     const term = searchTerm.toLowerCase();
@@ -34,7 +35,6 @@ function filterVehicles(vehiclesArray, searchTerm) {
     );
 }
 
-// API: get vehicles with pagination and search
 app.get('/api/vehicles', (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -53,7 +53,6 @@ app.get('/api/vehicles', (req, res) => {
     });
 });
 
-// Statistics (total & today)
 app.get('/api/stats', (req, res) => {
     const total = vehicles.length;
     const today = new Date();
@@ -66,7 +65,6 @@ app.get('/api/stats', (req, res) => {
     res.json({ total, createdToday });
 });
 
-// Generate QR (initialises scan counter)
 app.post('/api/generate', (req, res) => {
     try {
         const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
@@ -87,8 +85,8 @@ app.post('/api/generate', (req, res) => {
             qrData,
             qrUrl,
             createdAt: new Date(),
-            scans: 0,               // 👈 new: scan counter
-            lastScannedAt: null    // 👈 new: last scan timestamp
+            scans: 0,
+            lastScannedAt: null
         };
         vehicles.push(newVehicle);
         res.json({ success: true, qrData, qrUrl });
@@ -98,14 +96,12 @@ app.post('/api/generate', (req, res) => {
     }
 });
 
-// Update vehicle (edit) – preserve scan data
 app.put('/api/vehicles/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
         const index = vehicles.findIndex(v => v.id === id);
         if (index === -1) return res.status(404).json({ error: 'Not found' });
-        // keep existing scans and lastScannedAt
         vehicles[index] = {
             ...vehicles[index],
             vehicleNumber,
@@ -121,7 +117,6 @@ app.put('/api/vehicles/:id', (req, res) => {
     }
 });
 
-// Delete vehicle
 app.delete('/api/vehicles/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -135,14 +130,11 @@ app.delete('/api/vehicles/:id', (req, res) => {
     }
 });
 
-// QR scan page – increment scan counter and record last scan time
 app.get('/vehicle/:qrid', (req, res) => {
     const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
     if (!vehicle) {
         return res.status(404).send('<h1>❌ Vehicle not found</h1>');
     }
-
-    // ✨ ANALYTICS: increment scan counter, update last scanned timestamp
     vehicle.scans = (vehicle.scans || 0) + 1;
     vehicle.lastScannedAt = new Date();
 
