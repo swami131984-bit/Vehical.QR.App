@@ -3,183 +3,122 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>FleetQR Pro | Smart Vehicle Stickers</title>
+  <title>FleetQR Pro | Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Inter',sans-serif; background:radial-gradient(circle at 10% 20%,#0f172a,#0a0f1c); min-height:100vh; padding:2rem; }
-    .container { max-width:1300px; margin:0 auto; }
-    .hero { text-align:center; margin-bottom:2rem; }
-    .hero h1 { font-size:2.8rem; background:linear-gradient(135deg,#c084fc,#60a5fa); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-0.5px; }
-    .hero p { color:#94a3b8; margin-top:0.5rem; }
-    .stats { display:flex; gap:1rem; justify-content:center; margin-bottom:2rem; flex-wrap:wrap; }
-    .stat-card { background:rgba(15,23,42,0.6); backdrop-filter:blur(16px); border-radius:1.5rem; padding:1rem 2rem; text-align:center; border:1px solid rgba(255,255,255,0.1); min-width:160px; }
-    .stat-card i { font-size:2rem; color:#60a5fa; }
-    .stat-card h3 { color:white; font-size:2rem; margin:0.5rem 0; }
-    .stat-card p { color:#94a3b8; }
-    .dashboard { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
-    .card { background:rgba(15,23,42,0.6); backdrop-filter:blur(16px); border-radius:2rem; border:1px solid rgba(255,255,255,0.1); padding:2rem; transition:transform 0.2s ease,box-shadow 0.2s ease; }
-    .card:hover { transform:translateY(-5px); box-shadow:0 25px 40px -12px rgba(0,0,0,0.4); }
-    .card-title { font-size:1.5rem; font-weight:600; margin-bottom:1.8rem; display:flex; align-items:center; gap:0.75rem; border-left:4px solid #3b82f6; padding-left:1rem; color:white; }
-    .form-group { margin-bottom:1.5rem; }
-    label { display:block; margin-bottom:0.5rem; font-weight:500; color:#cbd5e1; }
-    input, select { width:100%; padding:1rem; background:#0f172a; border:1px solid #334155; border-radius:1rem; color:white; font-size:1rem; }
-    input:focus, select:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.3); }
-    .phone-group { display:flex; gap:0.5rem; align-items:center; }
-    .phone-group select, .phone-group input[type="text"] { width:35%; }
-    .phone-group input[type="tel"] { width:65%; }
-    button { background:linear-gradient(95deg,#3b82f6,#8b5cf6); width:100%; padding:1rem; border:none; border-radius:1.5rem; font-weight:600; color:white; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
-    button:hover { transform:scale(1.02); box-shadow:0 10px 20px -5px #3b82f6; }
-    .qr-result { background:#0f172a; border-radius:1.5rem; padding:1.5rem; margin-top:1.8rem; text-align:center; border:1px solid #2d3748; }
-    .qr-code { background:white; padding:1rem; border-radius:1rem; display:inline-block; margin:1rem 0; }
-    .qr-actions { display:flex; gap:1rem; justify-content:center; margin-top:1rem; }
-    .qr-actions button { width:auto; background:#1e293b; padding:0.6rem 1.2rem; }
-    .qr-actions button:hover { background:#334155; transform:none; }
-    .vehicle-list { max-height:500px; overflow-y:auto; padding-right:0.5rem; }
-    .vehicle-item { background:#0f172a; border-radius:1.2rem; padding:1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; border:1px solid #1e293b; transition:0.2s; }
-    .vehicle-item:hover { background:#1e293b; border-color:#3b82f6; }
-    .vehicle-info h4 { color:white; font-weight:600; }
-    .vehicle-info p { font-size:0.8rem; color:#94a3b8; }
-    .btn-icon { background:none; color:#94a3b8; border:1px solid #334155; border-radius:0.8rem; padding:0.5rem; width:auto; cursor:pointer; }
-    .btn-icon:hover { color:#60a5fa; border-color:#60a5fa; transform:none; }
-    .toast { position:fixed; bottom:2rem; right:2rem; background:#10b981; padding:0.75rem 1.5rem; border-radius:2rem; color:white; font-weight:500; opacity:0; transition:0.3s; z-index:1000; }
-    .pagination { display:flex; justify-content:center; gap:1rem; margin-top:1rem; align-items:center; }
-    .pagination button { width:auto; padding:0.5rem 1rem; background:#1e293b; }
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; z-index:1001; }
-    .modal-content { background:#0f172a; border-radius:2rem; padding:2rem; max-width:500px; width:90%; border:1px solid #334155; }
-    .modal-content h3 { color:white; margin-bottom:1rem; }
-    .modal-content input, .modal-content select { margin-bottom:1rem; }
-    .modal-buttons { display:flex; gap:1rem; margin-top:1rem; }
-    .modal-buttons button { margin:0; }
-    @media (max-width:800px) { .dashboard { grid-template-columns:1fr; } body { padding:1rem; } .hero h1 { font-size:2rem; } .stats { flex-direction:column; align-items:center; } }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:radial-gradient(circle at 10% 20%,#0f172a,#0a0f1c);min-height:100vh;padding:2rem;}
+    .container{max-width:1300px;margin:0 auto;}
+    .hero{text-align:center;margin-bottom:2rem;}
+    .hero h1{font-size:2.8rem;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .hero p{color:#94a3b8;}
+    .stats{display:flex;gap:1rem;justify-content:center;margin-bottom:2rem;flex-wrap:wrap;}
+    .stat-card{background:rgba(15,23,42,0.6);backdrop-filter:blur(16px);border-radius:1.5rem;padding:1rem 2rem;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:160px;}
+    .stat-card i{font-size:2rem;color:#60a5fa;}
+    .stat-card h3{color:white;font-size:2rem;margin:0.5rem 0;}
+    .stat-card p{color:#94a3b8;}
+    .dashboard{display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
+    .card{background:rgba(15,23,42,0.6);backdrop-filter:blur(16px);border-radius:2rem;border:1px solid rgba(255,255,255,0.1);padding:2rem;transition:transform 0.2s;}
+    .card:hover{transform:translateY(-5px);}
+    .card-title{font-size:1.5rem;font-weight:600;margin-bottom:1.8rem;display:flex;align-items:center;gap:0.75rem;border-left:4px solid #3b82f6;padding-left:1rem;color:white;}
+    .form-group{margin-bottom:1.5rem;}
+    label{display:block;margin-bottom:0.5rem;font-weight:500;color:#cbd5e1;}
+    input,select{width:100%;padding:1rem;background:#0f172a;border:1px solid #334155;border-radius:1rem;color:white;font-size:1rem;}
+    input:focus,select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.3);}
+    .phone-group{display:flex;gap:0.5rem;align-items:center;}
+    .phone-group select,.phone-group input[type="text"]{width:35%;}
+    .phone-group input[type="tel"]{width:65%;}
+    button{background:linear-gradient(95deg,#3b82f6,#8b5cf6);width:100%;padding:1rem;border:none;border-radius:1.5rem;font-weight:600;color:white;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+    button:hover{transform:scale(1.02);box-shadow:0 10px 20px -5px #3b82f6;}
+    .qr-result{background:#0f172a;border-radius:1.5rem;padding:1.5rem;margin-top:1.8rem;text-align:center;border:1px solid #2d3748;}
+    .qr-code{background:white;padding:1rem;border-radius:1rem;display:inline-block;margin:1rem 0;}
+    .qr-actions{display:flex;gap:1rem;justify-content:center;margin-top:1rem;}
+    .qr-actions button{width:auto;background:#1e293b;padding:0.6rem 1.2rem;}
+    .vehicle-list{max-height:500px;overflow-y:auto;padding-right:0.5rem;}
+    .vehicle-item{background:#0f172a;border-radius:1.2rem;padding:1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;border:1px solid #1e293b;}
+    .vehicle-item:hover{background:#1e293b;border-color:#3b82f6;}
+    .vehicle-info h4{color:white;font-weight:600;}
+    .vehicle-info p{font-size:0.8rem;color:#94a3b8;}
+    .btn-icon{background:none;color:#94a3b8;border:1px solid #334155;border-radius:0.8rem;padding:0.5rem;width:auto;cursor:pointer;}
+    .btn-icon:hover{color:#60a5fa;border-color:#60a5fa;}
+    .toast{position:fixed;bottom:2rem;right:2rem;background:#10b981;padding:0.75rem 1.5rem;border-radius:2rem;color:white;font-weight:500;opacity:0;transition:0.3s;z-index:1000;}
+    .pagination{display:flex;justify-content:center;gap:1rem;margin-top:1rem;align-items:center;}
+    .pagination button{width:auto;padding:0.5rem 1rem;background:#1e293b;}
+    .search-container{display:flex;gap:0.5rem;margin-bottom:1rem;}
+    .search-container input{flex:1;margin-bottom:0;}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;z-index:1001;}
+    .modal-content{background:#0f172a;border-radius:2rem;padding:2rem;max-width:500px;width:90%;border:1px solid #334155;}
+    .modal-content h3{color:white;margin-bottom:1rem;}
+    .modal-content input,.modal-content select{margin-bottom:1rem;}
+    .modal-buttons{display:flex;gap:1rem;margin-top:1rem;}
+    .modal-buttons button{margin:0;}
+    @media (max-width:800px){.dashboard{grid-template-columns:1fr;}body{padding:1rem;}.hero h1{font-size:2rem;}.stats{flex-direction:column;align-items:center;}}
   </style>
 </head>
 <body>
 <div class="container">
   <div class="hero">
     <h1><i class="fas fa-qrcode"></i> FleetQR Pro</h1>
-    <p>Generate smart stickers – scan, call, track</p>
+    <p>Generate, search, edit, and manage QR stickers</p>
   </div>
-
-  <!-- Statistics cards -->
   <div class="stats">
-    <div class="stat-card">
-      <i class="fas fa-qrcode"></i>
-      <h3 id="totalQrCount">0</h3>
-      <p>Total QR Codes</p>
-    </div>
-    <div class="stat-card">
-      <i class="fas fa-calendar-day"></i>
-      <h3 id="todayQrCount">0</h3>
-      <p>Generated Today</p>
-    </div>
+    <div class="stat-card"><i class="fas fa-qrcode"></i><h3 id="totalQrCount">0</h3><p>Total QR Codes</p></div>
+    <div class="stat-card"><i class="fas fa-calendar-day"></i><h3 id="todayQrCount">0</h3><p>Generated Today</p></div>
   </div>
-
   <div class="dashboard">
     <!-- Left: QR Generator -->
     <div class="card">
       <div class="card-title"><i class="fas fa-plus-circle"></i> New Sticker</div>
-      <div class="form-group">
-        <label><i class="fas fa-car"></i> Vehicle Number</label>
-        <input type="text" id="vehicleNumber" placeholder="e.g., MH12AB1234">
-      </div>
-      <div class="form-group">
-        <label><i class="fas fa-user"></i> Owner Name</label>
-        <input type="text" id="ownerName" placeholder="Full name">
-      </div>
-      <div class="form-group">
-        <label><i class="fas fa-phone-alt"></i> Phone Number</label>
+      <div class="form-group"><label><i class="fas fa-car"></i> Vehicle Number</label><input type="text" id="vehicleNumber" placeholder="e.g., MH12AB1234"></div>
+      <div class="form-group"><label><i class="fas fa-user"></i> Owner Name</label><input type="text" id="ownerName" placeholder="Full name"></div>
+      <div class="form-group"><label><i class="fas fa-phone-alt"></i> Phone Number</label>
         <div class="phone-group">
           <select id="countryCodeSelect">
-            <option value="+374">🇦🇲 +374 (Armenia)</option>
-            <option value="+7">🇷🇺 +7 (Russia)</option>
-            <option value="+995">🇬🇪 +995 (Georgia)</option>
-            <option value="__MANUAL__">✏️ Manual (type code)</option>
+            <option value="+374">🇦🇲 +374 (Armenia)</option><option value="+7">🇷🇺 +7 (Russia)</option><option value="+995">🇬🇪 +995 (Georgia)</option>
+            <option value="__MANUAL__">✏️ Manual</option>
           </select>
           <input type="text" id="manualCountryCode" placeholder="e.g., +1" style="display:none;">
-          <input type="tel" id="phoneNumber" placeholder="Local number (e.g., 9876543210)">
+          <input type="tel" id="phoneNumber" placeholder="Local number">
         </div>
       </div>
       <button id="generateBtn"><i class="fas fa-magic"></i> Generate QR Code</button>
-      <div id="qrResult" style="display:none" class="qr-result">
-        <h3><i class="fas fa-check-circle" style="color:#10b981"></i> QR Ready</h3>
-        <div id="qrImage" class="qr-code"></div>
-        <div class="qr-actions">
-          <button id="copyUrlBtn"><i class="fas fa-copy"></i> Copy URL</button>
-          <button id="downloadQrBtn"><i class="fas fa-download"></i> Download PNG</button>
-        </div>
-        <p style="font-size:0.8rem; margin-top:12px"><i class="fas fa-shield-alt"></i> Waterproof ready</p>
-      </div>
+      <div id="qrResult" style="display:none" class="qr-result"><h3><i class="fas fa-check-circle" style="color:#10b981"></i> QR Ready</h3><div id="qrImage" class="qr-code"></div><div class="qr-actions"><button id="copyUrlBtn"><i class="fas fa-copy"></i> Copy URL</button><button id="downloadQrBtn"><i class="fas fa-download"></i> Download PNG</button></div><p style="font-size:0.8rem;margin-top:12px"><i class="fas fa-shield-alt"></i> Waterproof ready</p></div>
     </div>
-
-    <!-- Right: Vehicle Gallery -->
+    <!-- Right: Vehicle Gallery with Search -->
     <div class="card">
       <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
         <span><i class="fas fa-list-ul"></i> Active Stickers</span>
-        <button id="exportBtn" class="btn-icon" style="background: #1E293B; padding: 0.4rem 1rem; border-radius: 2rem;"><i class="fas fa-download"></i> Export CSV</button>
+        <button id="exportBtn" class="btn-icon" style="background:#1E293B; padding:0.4rem 1rem; border-radius:2rem;"><i class="fas fa-download"></i> Export CSV</button>
       </div>
-      <div id="vehicleList" class="vehicle-list">
-        <div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-spinner fa-pulse"></i> Loading fleet...</div>
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="🔍 Search by vehicle number, owner name, or phone number..." autocomplete="off">
+        <button id="clearSearchBtn" class="btn-icon" style="background:#1E293B; padding:0 1rem;">✖ Clear</button>
       </div>
+      <div id="vehicleList" class="vehicle-list"><div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-spinner fa-pulse"></i> Loading fleet...</div></div>
       <div class="pagination" id="paginationControls" style="display:none;">
         <button id="prevPageBtn"><i class="fas fa-chevron-left"></i> Previous</button>
         <span id="pageInfo" style="color:#cbd5e1;">Page 1 / 1</span>
         <button id="nextPageBtn">Next <i class="fas fa-chevron-right"></i></button>
       </div>
-      <div style="margin-top: 1rem; text-align: right;">
-        <button id="logoutBtn" class="btn-icon" style="background: #dc2626; color: white; padding: 0.4rem 1rem; border-radius: 2rem;"><i class="fas fa-sign-out-alt"></i> Logout</button>
-      </div>
+      <div style="margin-top:1rem; text-align:right;"><button id="logoutBtn" class="btn-icon" style="background:#dc2626; color:white; padding:0.4rem 1rem; border-radius:2rem;"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
     </div>
   </div>
 </div>
-
 <!-- Edit Modal -->
-<div id="editModal" class="modal">
-  <div class="modal-content">
-    <h3>✏️ Edit Vehicle</h3>
-    <input type="text" id="editVehicleNumber" placeholder="Vehicle Number">
-    <input type="text" id="editOwnerName" placeholder="Owner Name">
-    <div class="phone-group">
-      <select id="editCountryCodeSelect">
-        <option value="+374">🇦🇲 +374 (Armenia)</option>
-        <option value="+7">🇷🇺 +7 (Russia)</option>
-        <option value="+995">🇬🇪 +995 (Georgia)</option>
-        <option value="__MANUAL__">✏️ Manual (type code)</option>
-      </select>
-      <input type="text" id="editManualCountryCode" placeholder="e.g., +1" style="display:none;">
-      <input type="text" id="editPhoneNumber" placeholder="Phone number">
-    </div>
-    <div class="modal-buttons">
-      <button id="saveEditBtn">Save Changes</button>
-      <button id="cancelEditBtn" style="background:#475569;">Cancel</button>
-    </div>
-  </div>
-</div>
-
+<div id="editModal" class="modal"><div class="modal-content"><h3>✏️ Edit Vehicle</h3><input type="text" id="editVehicleNumber" placeholder="Vehicle Number"><input type="text" id="editOwnerName" placeholder="Owner Name"><div class="phone-group"><select id="editCountryCodeSelect"><option value="+374">🇦🇲 +374 (Armenia)</option><option value="+7">🇷🇺 +7 (Russia)</option><option value="+995">🇬🇪 +995 (Georgia)</option><option value="__MANUAL__">✏️ Manual</option></select><input type="text" id="editManualCountryCode" placeholder="e.g., +1" style="display:none;"><input type="text" id="editPhoneNumber" placeholder="Phone number"></div><div class="modal-buttons"><button id="saveEditBtn">Save Changes</button><button id="cancelEditBtn" style="background:#475569;">Cancel</button></div></div></div>
 <div id="toast" class="toast">✨ QR generated!</div>
-
 <script>
   const token = localStorage.getItem('admin_token');
   if (!token) window.location.href = '/login.html';
 
-  // Country code toggling helpers
+  // Country code helpers
   function setupCountryCodeToggling(selectId, manualInputId) {
     const select = document.getElementById(selectId);
     const manual = document.getElementById(manualInputId);
     if (!select || !manual) return;
-    function update() {
-      if (select.value === '__MANUAL__') {
-        manual.style.display = 'block';
-        manual.required = true;
-      } else {
-        manual.style.display = 'none';
-        manual.required = false;
-        manual.value = '';
-      }
-    }
-    select.addEventListener('change', update);
-    update();
+    function update() { if (select.value === '__MANUAL__') { manual.style.display = 'block'; manual.required = true; } else { manual.style.display = 'none'; manual.required = false; manual.value = ''; } }
+    select.addEventListener('change', update); update();
   }
   function getSelectedCountryCode(selectId, manualInputId) {
     const select = document.getElementById(selectId);
@@ -187,46 +126,34 @@
     if (select.value === '__MANUAL__') return manual.value.trim();
     return select.value;
   }
-
   setupCountryCodeToggling('countryCodeSelect', 'manualCountryCode');
   setupCountryCodeToggling('editCountryCodeSelect', 'editManualCountryCode');
 
   let currentQrUrl = '', currentQrImageSrc = '';
   let currentPage = 1, totalPages = 1, editingVehicleId = null;
+  let currentSearch = '';
 
   async function loadStats() {
-    try {
-      const res = await fetch('/api/stats');
-      const stats = await res.json();
-      document.getElementById('totalQrCount').innerText = stats.total;
-      document.getElementById('todayQrCount').innerText = stats.createdToday;
-    } catch(e) { console.error(e); }
+    try { const res = await fetch('/api/stats'); const s = await res.json(); document.getElementById('totalQrCount').innerText = s.total; document.getElementById('todayQrCount').innerText = s.createdToday; } catch(e) { console.error(e); }
   }
-
-  async function loadVehicles(page = 1) {
+  async function loadVehicles(page = 1, search = currentSearch) {
     try {
-      const res = await fetch(`/api/vehicles?page=${page}&limit=10`);
+      const url = `/api/vehicles?page=${page}&limit=10&search=${encodeURIComponent(search)}`;
+      const res = await fetch(url);
       const data = await res.json();
       totalPages = data.totalPages;
       currentPage = data.page;
+      currentSearch = data.search || '';
       renderVehicleList(data.vehicles);
       updatePagination();
     } catch(e) { console.error(e); }
   }
-
   function renderVehicleList(vehicles) {
     const container = document.getElementById('vehicleList');
-    if (!vehicles.length) {
-      container.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-car-side"></i> No stickers yet.</div>';
-      return;
-    }
+    if (!vehicles.length) { container.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-car-side"></i> No matching stickers.</div>'; return; }
     container.innerHTML = vehicles.map(v => `
       <div class="vehicle-item">
-        <div class="vehicle-info">
-          <h4>${escapeHtml(v.vehicleNumber)}</h4>
-          <p>${escapeHtml(v.ownerName)} • ${escapeHtml(v.countryCode)}${escapeHtml(v.phoneNumber)}</p>
-          <small>${new Date(v.createdAt).toLocaleDateString()}</small>
-        </div>
+        <div class="vehicle-info"><h4>${escapeHtml(v.vehicleNumber)}</h4><p>${escapeHtml(v.ownerName)} • ${escapeHtml(v.countryCode)}${escapeHtml(v.phoneNumber)}</p><small>${new Date(v.createdAt).toLocaleDateString()}</small></div>
         <div>
           <button class="btn-icon" onclick="viewQR('${escapeHtml(v.qrUrl)}')" title="Show QR"><i class="fas fa-qrcode"></i></button>
           <button class="btn-icon" onclick="copyToClipboard('${escapeHtml(v.qrUrl)}')" title="Copy URL"><i class="fas fa-copy"></i></button>
@@ -236,7 +163,6 @@
       </div>
     `).join('');
   }
-
   function updatePagination() {
     const controls = document.getElementById('paginationControls');
     const pageInfo = document.getElementById('pageInfo');
@@ -246,13 +172,10 @@
     document.getElementById('prevPageBtn').disabled = (currentPage === 1);
     document.getElementById('nextPageBtn').disabled = (currentPage === totalPages);
   }
-
-  document.getElementById('prevPageBtn')?.addEventListener('click', () => {
-    if (currentPage > 1) loadVehicles(currentPage - 1);
-  });
-  document.getElementById('nextPageBtn')?.addEventListener('click', () => {
-    if (currentPage < totalPages) loadVehicles(currentPage + 1);
-  });
+  document.getElementById('prevPageBtn')?.addEventListener('click', () => { if (currentPage > 1) loadVehicles(currentPage - 1); });
+  document.getElementById('nextPageBtn')?.addEventListener('click', () => { if (currentPage < totalPages) loadVehicles(currentPage + 1); });
+  document.getElementById('searchInput')?.addEventListener('input', (e) => { currentSearch = e.target.value; loadVehicles(1, currentSearch); });
+  document.getElementById('clearSearchBtn')?.addEventListener('click', () => { document.getElementById('searchInput').value = ''; currentSearch = ''; loadVehicles(1, ''); });
 
   function openEditModal(id, vn, owner, cc, phone) {
     editingVehicleId = id;
@@ -262,148 +185,63 @@
     const editSelect = document.getElementById('editCountryCodeSelect');
     const editManual = document.getElementById('editManualCountryCode');
     const predefined = ['+374', '+7', '+995'];
-    if (predefined.includes(cc)) {
-      editSelect.value = cc;
-      editManual.style.display = 'none';
-      editManual.value = '';
-    } else {
-      editSelect.value = '__MANUAL__';
-      editManual.style.display = 'block';
-      editManual.value = cc;
-    }
+    if (predefined.includes(cc)) { editSelect.value = cc; editManual.style.display = 'none'; editManual.value = ''; }
+    else { editSelect.value = '__MANUAL__'; editManual.style.display = 'block'; editManual.value = cc; }
     document.getElementById('editModal').style.display = 'flex';
   }
-
   async function saveEdit() {
     const vehicleNumber = document.getElementById('editVehicleNumber').value.trim();
     const ownerName = document.getElementById('editOwnerName').value.trim();
     const phoneNumber = document.getElementById('editPhoneNumber').value.trim();
     let countryCode = getSelectedCountryCode('editCountryCodeSelect', 'editManualCountryCode');
-    if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
-      showToast('All fields required');
-      return;
-    }
+    if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) { showToast('All fields required'); return; }
     try {
-      const res = await fetch(`/api/vehicles/${editingVehicleId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vehicleNumber, ownerName, countryCode, phoneNumber })
-      });
+      const res = await fetch(`/api/vehicles/${editingVehicleId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vehicleNumber, ownerName, countryCode, phoneNumber }) });
       const data = await res.json();
-      if (data.success) {
-        showToast('✅ Vehicle updated');
-        document.getElementById('editModal').style.display = 'none';
-        loadVehicles(currentPage);
-        loadStats();
-      } else showToast('Update failed');
+      if (data.success) { showToast('✅ Vehicle updated'); document.getElementById('editModal').style.display = 'none'; loadVehicles(currentPage, currentSearch); loadStats(); } else showToast('Update failed');
     } catch(err) { showToast('Network error'); }
   }
-
   async function deleteVehicle(id) {
     if (!confirm('Permanently delete this sticker?')) return;
-    try {
-      const res = await fetch(`/api/vehicles/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        showToast('🗑️ Deleted');
-        loadVehicles(currentPage);
-        loadStats();
-      } else showToast('Delete failed');
-    } catch(err) { showToast('Network error'); }
+    try { const res = await fetch(`/api/vehicles/${id}`, { method: 'DELETE' }); const data = await res.json(); if (data.success) { showToast('🗑️ Deleted'); loadVehicles(currentPage, currentSearch); loadStats(); } else showToast('Delete failed'); } catch(err) { showToast('Network error'); }
   }
-
   async function generateQR() {
     const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
     const ownerName = document.getElementById('ownerName').value.trim();
     const phoneNumber = document.getElementById('phoneNumber').value.trim();
     let countryCode = getSelectedCountryCode('countryCodeSelect', 'manualCountryCode');
-    if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
-      showToast('All fields required');
-      return;
-    }
+    if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) { showToast('All fields required'); return; }
     const btn = document.getElementById('generateBtn');
     btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generating...';
     btn.disabled = true;
     try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vehicleNumber, ownerName, countryCode, phoneNumber })
-      });
+      const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vehicleNumber, ownerName, countryCode, phoneNumber }) });
       const data = await res.json();
       if (data.success) {
-        currentQrUrl = data.qrUrl;
-        currentQrImageSrc = `https://quickchart.io/qr?text=${encodeURIComponent(currentQrUrl)}&size=250&margin=2`;
+        currentQrUrl = data.qrUrl; currentQrImageSrc = `https://quickchart.io/qr?text=${encodeURIComponent(currentQrUrl)}&size=250&margin=2`;
         document.getElementById('qrImage').innerHTML = `<img src="${currentQrImageSrc}" style="width:180px">`;
         document.getElementById('qrResult').style.display = 'block';
         showToast('🎉 QR ready');
-        document.getElementById('vehicleNumber').value = '';
-        document.getElementById('ownerName').value = '';
-        document.getElementById('phoneNumber').value = '';
-        document.getElementById('countryCodeSelect').value = '+374';
-        document.getElementById('manualCountryCode').style.display = 'none';
-        document.getElementById('manualCountryCode').value = '';
-        loadVehicles(currentPage);
-        loadStats();
+        document.getElementById('vehicleNumber').value = ''; document.getElementById('ownerName').value = ''; document.getElementById('phoneNumber').value = '';
+        document.getElementById('countryCodeSelect').value = '+374'; document.getElementById('manualCountryCode').style.display = 'none'; document.getElementById('manualCountryCode').value = '';
+        loadVehicles(currentPage, currentSearch); loadStats();
       } else showToast('Error: ' + (data.error || 'unknown'));
     } catch(err) { showToast('Network error: ' + err.message); }
     finally { btn.innerHTML = '<i class="fas fa-magic"></i> Generate QR Code'; btn.disabled = false; }
   }
-
-  function viewQR(url) {
-    currentQrUrl = url;
-    currentQrImageSrc = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=250&margin=2`;
-    document.getElementById('qrImage').innerHTML = `<img src="${currentQrImageSrc}" style="width:180px">`;
-    document.getElementById('qrResult').style.display = 'block';
-    showToast('QR loaded');
-  }
-
+  function viewQR(url) { currentQrUrl = url; currentQrImageSrc = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=250&margin=2`; document.getElementById('qrImage').innerHTML = `<img src="${currentQrImageSrc}" style="width:180px">`; document.getElementById('qrResult').style.display = 'block'; showToast('QR loaded'); }
   function copyToClipboard(text) { navigator.clipboard.writeText(text); showToast('📋 URL copied'); }
-  function downloadQR() {
-    if (currentQrImageSrc) {
-      let a = document.createElement('a');
-      a.download = 'vehicle_qr.png';
-      a.href = currentQrImageSrc;
-      a.click();
-    } else showToast('Generate a QR first');
-  }
-
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.style.opacity = 1;
-    setTimeout(() => t.style.opacity = 0, 2000);
-  }
-
-  function escapeHtml(str) {
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
-  }
-
+  function downloadQR() { if (currentQrImageSrc) { let a = document.createElement('a'); a.download = 'vehicle_qr.png'; a.href = currentQrImageSrc; a.click(); } else showToast('Generate a QR first'); }
+  function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.opacity = 1; setTimeout(() => t.style.opacity = 0, 2000); }
+  function escapeHtml(str) { return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')); }
   async function exportToCSV() {
-    try {
-      showToast('Preparing export...');
-      const res = await fetch('/api/vehicles?limit=10000');
-      const data = await res.json();
-      const vehicles = data.vehicles || [];
-      if (!vehicles.length) { showToast('No vehicles'); return; }
-      const headers = ['Vehicle Number','Owner Name','Phone Number','QR URL','Created At'];
-      const rows = vehicles.map(v => [v.vehicleNumber, v.ownerName, `${v.countryCode}${v.phoneNumber}`, v.qrUrl, new Date(v.createdAt).toLocaleString()]);
-      const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
-      const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8'});
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `fleetqr_export_${new Date().toISOString().slice(0,19)}.csv`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-      showToast(`✅ Exported ${vehicles.length} vehicles`);
+    try { showToast('Preparing export...'); const res = await fetch('/api/vehicles?limit=10000&search=' + encodeURIComponent(currentSearch)); const data = await res.json(); const vehicles = data.vehicles || []; if (!vehicles.length) { showToast('No vehicles'); return; }
+    const headers = ['Vehicle Number','Owner Name','Phone Number','QR URL','Created At']; const rows = vehicles.map(v => [v.vehicleNumber, v.ownerName, `${v.countryCode}${v.phoneNumber}`, v.qrUrl, new Date(v.createdAt).toLocaleString()]);
+    const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+    const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `fleetqr_export_${new Date().toISOString().slice(0,19)}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast(`✅ Exported ${vehicles.length} vehicles`);
     } catch(e) { showToast('Export failed'); }
   }
-
-  function logout() {
-    localStorage.removeItem('admin_token');
-    showToast('Logged out');
-    setTimeout(() => window.location.href = '/login.html', 500);
-  }
+  function logout() { localStorage.removeItem('admin_token'); showToast('Logged out'); setTimeout(() => window.location.href = '/login.html', 500); }
 
   document.getElementById('generateBtn').addEventListener('click', generateQR);
   document.getElementById('copyUrlBtn').addEventListener('click', () => copyToClipboard(currentQrUrl));
