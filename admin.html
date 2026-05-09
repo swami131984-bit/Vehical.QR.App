@@ -10,21 +10,26 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Inter',sans-serif; background:radial-gradient(circle at 10% 20%,#0f172a,#0a0f1c); min-height:100vh; padding:2rem; }
     .container { max-width:1300px; margin:0 auto; }
-    .hero { text-align:center; margin-bottom:3rem; }
+    .hero { text-align:center; margin-bottom:2rem; }
     .hero h1 { font-size:2.8rem; background:linear-gradient(135deg,#c084fc,#60a5fa); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-0.5px; }
-    .hero p { color:#94a3b8; font-size:1.1rem; margin-top:0.5rem; }
+    .hero p { color:#94a3b8; margin-top:0.5rem; }
+    .stats { display:flex; gap:1rem; justify-content:center; margin-bottom:2rem; flex-wrap:wrap; }
+    .stat-card { background:rgba(15,23,42,0.6); backdrop-filter:blur(16px); border-radius:1.5rem; padding:1rem 2rem; text-align:center; border:1px solid rgba(255,255,255,0.1); min-width:160px; }
+    .stat-card i { font-size:2rem; color:#60a5fa; }
+    .stat-card h3 { color:white; font-size:2rem; margin:0.5rem 0; }
+    .stat-card p { color:#94a3b8; }
     .dashboard { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
     .card { background:rgba(15,23,42,0.6); backdrop-filter:blur(16px); border-radius:2rem; border:1px solid rgba(255,255,255,0.1); padding:2rem; transition:transform 0.2s ease,box-shadow 0.2s ease; }
     .card:hover { transform:translateY(-5px); box-shadow:0 25px 40px -12px rgba(0,0,0,0.4); }
     .card-title { font-size:1.5rem; font-weight:600; margin-bottom:1.8rem; display:flex; align-items:center; gap:0.75rem; border-left:4px solid #3b82f6; padding-left:1rem; color:white; }
     .form-group { margin-bottom:1.5rem; }
     label { display:block; margin-bottom:0.5rem; font-weight:500; color:#cbd5e1; }
-    input, select { width:100%; padding:1rem; background:#0f172a; border:1px solid #334155; border-radius:1rem; color:white; font-size:1rem; transition:all 0.2s; }
+    input, select { width:100%; padding:1rem; background:#0f172a; border:1px solid #334155; border-radius:1rem; color:white; font-size:1rem; }
     input:focus, select:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.3); }
     .phone-group { display:flex; gap:0.5rem; align-items:center; }
     .phone-group select, .phone-group input[type="text"] { width:35%; }
     .phone-group input[type="tel"] { width:65%; }
-    button { background:linear-gradient(95deg,#3b82f6,#8b5cf6); width:100%; padding:1rem; border:none; border-radius:1.5rem; font-weight:600; font-size:1rem; color:white; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+    button { background:linear-gradient(95deg,#3b82f6,#8b5cf6); width:100%; padding:1rem; border:none; border-radius:1.5rem; font-weight:600; color:white; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
     button:hover { transform:scale(1.02); box-shadow:0 10px 20px -5px #3b82f6; }
     .qr-result { background:#0f172a; border-radius:1.5rem; padding:1.5rem; margin-top:1.8rem; text-align:center; border:1px solid #2d3748; }
     .qr-code { background:white; padding:1rem; border-radius:1rem; display:inline-block; margin:1rem 0; }
@@ -47,7 +52,7 @@
     .modal-content input, .modal-content select { margin-bottom:1rem; }
     .modal-buttons { display:flex; gap:1rem; margin-top:1rem; }
     .modal-buttons button { margin:0; }
-    @media (max-width:800px) { .dashboard { grid-template-columns:1fr; } body { padding:1rem; } .hero h1 { font-size:2rem; } }
+    @media (max-width:800px) { .dashboard { grid-template-columns:1fr; } body { padding:1rem; } .hero h1 { font-size:2rem; } .stats { flex-direction:column; align-items:center; } }
   </style>
 </head>
 <body>
@@ -56,6 +61,21 @@
     <h1><i class="fas fa-qrcode"></i> FleetQR Pro</h1>
     <p>Generate smart stickers – scan, call, track</p>
   </div>
+
+  <!-- Statistics cards -->
+  <div class="stats">
+    <div class="stat-card">
+      <i class="fas fa-qrcode"></i>
+      <h3 id="totalQrCount">0</h3>
+      <p>Total QR Codes</p>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-calendar-day"></i>
+      <h3 id="todayQrCount">0</h3>
+      <p>Generated Today</p>
+    </div>
+  </div>
+
   <div class="dashboard">
     <!-- Left: QR Generator -->
     <div class="card">
@@ -78,7 +98,7 @@
             <option value="__MANUAL__">✏️ Manual (type code)</option>
           </select>
           <input type="text" id="manualCountryCode" placeholder="e.g., +1" style="display:none;">
-          <input type="tel" id="phoneNumber" placeholder="Local number (e.g., 9876543210)" autocomplete="off">
+          <input type="tel" id="phoneNumber" placeholder="Local number (e.g., 9876543210)">
         </div>
       </div>
       <button id="generateBtn"><i class="fas fa-magic"></i> Generate QR Code</button>
@@ -89,7 +109,7 @@
           <button id="copyUrlBtn"><i class="fas fa-copy"></i> Copy URL</button>
           <button id="downloadQrBtn"><i class="fas fa-download"></i> Download PNG</button>
         </div>
-        <p style="font-size:0.8rem; margin-top:12px"><i class="fas fa-shield-alt"></i> Waterproof ready • High resolution</p>
+        <p style="font-size:0.8rem; margin-top:12px"><i class="fas fa-shield-alt"></i> Waterproof ready</p>
       </div>
     </div>
 
@@ -140,78 +160,71 @@
 <div id="toast" class="toast">✨ QR generated!</div>
 
 <script>
-  // 🔐 Admin authentication check
   const token = localStorage.getItem('admin_token');
-  if (!token) {
-    window.location.href = '/login.html';
-  }
+  if (!token) window.location.href = '/login.html';
 
-  // Helper for country code input (show/hide manual field)
+  // Country code toggling helpers
   function setupCountryCodeToggling(selectId, manualInputId) {
     const select = document.getElementById(selectId);
-    const manualInput = document.getElementById(manualInputId);
-    if (!select || !manualInput) return;
+    const manual = document.getElementById(manualInputId);
+    if (!select || !manual) return;
     function update() {
       if (select.value === '__MANUAL__') {
-        manualInput.style.display = 'block';
-        manualInput.required = true;
+        manual.style.display = 'block';
+        manual.required = true;
       } else {
-        manualInput.style.display = 'none';
-        manualInput.required = false;
-        manualInput.value = '';
+        manual.style.display = 'none';
+        manual.required = false;
+        manual.value = '';
       }
     }
     select.addEventListener('change', update);
     update();
   }
-
-  // Main form toggling
-  setupCountryCodeToggling('countryCodeSelect', 'manualCountryCode');
-  // Edit modal toggling
-  setupCountryCodeToggling('editCountryCodeSelect', 'editManualCountryCode');
-
-  // Function to get the actual country code value (from dropdown or manual)
   function getSelectedCountryCode(selectId, manualInputId) {
     const select = document.getElementById(selectId);
-    const manualInput = document.getElementById(manualInputId);
-    if (select.value === '__MANUAL__') {
-      return manualInput.value.trim();
-    } else {
-      return select.value;
-    }
+    const manual = document.getElementById(manualInputId);
+    if (select.value === '__MANUAL__') return manual.value.trim();
+    return select.value;
   }
 
-  let currentQrUrl = '';
-  let currentQrImageSrc = '';
-  let currentPage = 1;
-  let totalPages = 1;
-  let editingVehicleId = null;
+  setupCountryCodeToggling('countryCodeSelect', 'manualCountryCode');
+  setupCountryCodeToggling('editCountryCodeSelect', 'editManualCountryCode');
+
+  let currentQrUrl = '', currentQrImageSrc = '';
+  let currentPage = 1, totalPages = 1, editingVehicleId = null;
+
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/stats');
+      const stats = await res.json();
+      document.getElementById('totalQrCount').innerText = stats.total;
+      document.getElementById('todayQrCount').innerText = stats.createdToday;
+    } catch(e) { console.error(e); }
+  }
 
   async function loadVehicles(page = 1) {
     try {
       const res = await fetch(`/api/vehicles?page=${page}&limit=10`);
       const data = await res.json();
-      const vehicles = data.vehicles;
       totalPages = data.totalPages;
       currentPage = data.page;
-      renderVehicleList(vehicles);
-      updatePaginationControls();
+      renderVehicleList(data.vehicles);
+      updatePagination();
     } catch(e) { console.error(e); }
   }
 
   function renderVehicleList(vehicles) {
     const container = document.getElementById('vehicleList');
-    if (!vehicles || vehicles.length === 0) {
+    if (!vehicles.length) {
       container.innerHTML = '<div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-car-side"></i> No stickers yet.</div>';
       return;
     }
-    container.innerHTML = vehicles.map(v => {
-      const displayPhone = `${v.countryCode}${v.phoneNumber}`;
-      return `
+    container.innerHTML = vehicles.map(v => `
       <div class="vehicle-item">
         <div class="vehicle-info">
           <h4>${escapeHtml(v.vehicleNumber)}</h4>
-          <p>${escapeHtml(v.ownerName)} • ${escapeHtml(displayPhone)}</p>
+          <p>${escapeHtml(v.ownerName)} • ${escapeHtml(v.countryCode)}${escapeHtml(v.phoneNumber)}</p>
           <small>${new Date(v.createdAt).toLocaleDateString()}</small>
         </div>
         <div>
@@ -221,16 +234,13 @@
           <button class="btn-icon" onclick="deleteVehicle(${v.id})" title="Delete" style="color:#ef4444;"><i class="fas fa-trash-alt"></i></button>
         </div>
       </div>
-    `}).join('');
+    `).join('');
   }
 
-  function updatePaginationControls() {
+  function updatePagination() {
     const controls = document.getElementById('paginationControls');
     const pageInfo = document.getElementById('pageInfo');
-    if (totalPages <= 1) {
-      controls.style.display = 'none';
-      return;
-    }
+    if (totalPages <= 1) { controls.style.display = 'none'; return; }
     controls.style.display = 'flex';
     pageInfo.innerText = `Page ${currentPage} / ${totalPages}`;
     document.getElementById('prevPageBtn').disabled = (currentPage === 1);
@@ -244,25 +254,22 @@
     if (currentPage < totalPages) loadVehicles(currentPage + 1);
   });
 
-  function openEditModal(id, vehicleNumber, ownerName, countryCode, phoneNumber) {
+  function openEditModal(id, vn, owner, cc, phone) {
     editingVehicleId = id;
-    document.getElementById('editVehicleNumber').value = vehicleNumber;
-    document.getElementById('editOwnerName').value = ownerName;
-    document.getElementById('editPhoneNumber').value = phoneNumber;
-
-    // Set the country code dropdown or manual input
+    document.getElementById('editVehicleNumber').value = vn;
+    document.getElementById('editOwnerName').value = owner;
+    document.getElementById('editPhoneNumber').value = phone;
     const editSelect = document.getElementById('editCountryCodeSelect');
     const editManual = document.getElementById('editManualCountryCode');
-    // Check if countryCode matches any of the predefined values
     const predefined = ['+374', '+7', '+995'];
-    if (predefined.includes(countryCode)) {
-      editSelect.value = countryCode;
+    if (predefined.includes(cc)) {
+      editSelect.value = cc;
       editManual.style.display = 'none';
       editManual.value = '';
     } else {
       editSelect.value = '__MANUAL__';
       editManual.style.display = 'block';
-      editManual.value = countryCode;
+      editManual.value = cc;
     }
     document.getElementById('editModal').style.display = 'flex';
   }
@@ -287,33 +294,22 @@
         showToast('✅ Vehicle updated');
         document.getElementById('editModal').style.display = 'none';
         loadVehicles(currentPage);
-      } else {
-        showToast('Update failed');
-      }
-    } catch(err) {
-      showToast('Network error');
-    }
+        loadStats();
+      } else showToast('Update failed');
+    } catch(err) { showToast('Network error'); }
   }
 
-  document.getElementById('saveEditBtn')?.addEventListener('click', saveEdit);
-  document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
-    document.getElementById('editModal').style.display = 'none';
-  });
-
-  async function deleteVehicle(vehicleId) {
-    if (!confirm('Are you sure? This will permanently remove the sticker and QR data.')) return;
+  async function deleteVehicle(id) {
+    if (!confirm('Permanently delete this sticker?')) return;
     try {
-      const res = await fetch(`/api/vehicles/${vehicleId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/vehicles/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        showToast('🗑️ Vehicle deleted');
+        showToast('🗑️ Deleted');
         loadVehicles(currentPage);
-      } else {
-        showToast('Delete failed');
-      }
-    } catch(err) {
-      showToast('Network error');
-    }
+        loadStats();
+      } else showToast('Delete failed');
+    } catch(err) { showToast('Network error'); }
   }
 
   async function generateQR() {
@@ -322,7 +318,7 @@
     const phoneNumber = document.getElementById('phoneNumber').value.trim();
     let countryCode = getSelectedCountryCode('countryCodeSelect', 'manualCountryCode');
     if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
-      showToast('Vehicle number, owner name, country code, and phone number are required');
+      showToast('All fields required');
       return;
     }
     const btn = document.getElementById('generateBtn');
@@ -340,24 +336,18 @@
         currentQrImageSrc = `https://quickchart.io/qr?text=${encodeURIComponent(currentQrUrl)}&size=250&margin=2`;
         document.getElementById('qrImage').innerHTML = `<img src="${currentQrImageSrc}" style="width:180px">`;
         document.getElementById('qrResult').style.display = 'block';
-        showToast('🎉 QR ready!');
+        showToast('🎉 QR ready');
         document.getElementById('vehicleNumber').value = '';
         document.getElementById('ownerName').value = '';
         document.getElementById('phoneNumber').value = '';
-        // Reset country code to default (Armenia)
         document.getElementById('countryCodeSelect').value = '+374';
         document.getElementById('manualCountryCode').style.display = 'none';
         document.getElementById('manualCountryCode').value = '';
         loadVehicles(currentPage);
-      } else {
-        showToast('Error: ' + (data.error || 'unknown'));
-      }
-    } catch(err) {
-      showToast('Network error: ' + err.message);
-    } finally {
-      btn.innerHTML = '<i class="fas fa-magic"></i> Generate QR Code';
-      btn.disabled = false;
-    }
+        loadStats();
+      } else showToast('Error: ' + (data.error || 'unknown'));
+    } catch(err) { showToast('Network error: ' + err.message); }
+    finally { btn.innerHTML = '<i class="fas fa-magic"></i> Generate QR Code'; btn.disabled = false; }
   }
 
   function viewQR(url) {
@@ -368,80 +358,51 @@
     showToast('QR loaded');
   }
 
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-    showToast('📋 URL copied');
-  }
-
+  function copyToClipboard(text) { navigator.clipboard.writeText(text); showToast('📋 URL copied'); }
   function downloadQR() {
     if (currentQrImageSrc) {
-      let link = document.createElement('a');
-      link.download = 'vehicle_qr.png';
-      link.href = currentQrImageSrc;
-      link.click();
-    } else {
-      showToast('Generate a QR first');
-    }
+      let a = document.createElement('a');
+      a.download = 'vehicle_qr.png';
+      a.href = currentQrImageSrc;
+      a.click();
+    } else showToast('Generate a QR first');
   }
 
   function showToast(msg) {
-    const toast = document.getElementById('toast');
-    toast.innerText = msg;
-    toast.style.opacity = 1;
-    setTimeout(() => toast.style.opacity = 0, 2000);
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.opacity = 1;
+    setTimeout(() => t.style.opacity = 0, 2000);
   }
 
   function escapeHtml(str) {
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
   }
 
   async function exportToCSV() {
     try {
-      showToast('📊 Preparing export...');
+      showToast('Preparing export...');
       const res = await fetch('/api/vehicles?limit=10000');
       const data = await res.json();
       const vehicles = data.vehicles || [];
-      if (!vehicles.length) {
-        showToast('No vehicles to export');
-        return;
-      }
-      const headers = ['Vehicle Number', 'Owner Name', 'Phone Number', 'QR URL', 'Created At'];
-      const rows = vehicles.map(v => [
-        v.vehicleNumber,
-        v.ownerName,
-        `${v.countryCode}${v.phoneNumber}`,
-        v.qrUrl,
-        new Date(v.createdAt).toLocaleString()
-      ]);
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-      ].join('\n');
-      const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+      if (!vehicles.length) { showToast('No vehicles'); return; }
+      const headers = ['Vehicle Number','Owner Name','Phone Number','QR URL','Created At'];
+      const rows = vehicles.map(v => [v.vehicleNumber, v.ownerName, `${v.countryCode}${v.phoneNumber}`, v.qrUrl, new Date(v.createdAt).toLocaleString()]);
+      const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+      const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8'});
       const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.href = url;
-      link.setAttribute('download', `fleetqr_export_${new Date().toISOString().slice(0,19)}.csv`);
-      document.body.appendChild(link);
+      link.href = URL.createObjectURL(blob);
+      link.download = `fleetqr_export_${new Date().toISOString().slice(0,19)}.csv`;
       link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(link.href);
       showToast(`✅ Exported ${vehicles.length} vehicles`);
-    } catch (err) {
-      console.error(err);
-      showToast('Export failed');
-    }
+    } catch(e) { showToast('Export failed'); }
   }
 
   function logout() {
     localStorage.removeItem('admin_token');
-    showToast('👋 Logged out');
-    setTimeout(() => { window.location.href = '/login.html'; }, 500);
+    showToast('Logged out');
+    setTimeout(() => window.location.href = '/login.html', 500);
   }
 
   document.getElementById('generateBtn').addEventListener('click', generateQR);
@@ -449,8 +410,11 @@
   document.getElementById('downloadQrBtn').addEventListener('click', downloadQR);
   document.getElementById('exportBtn').addEventListener('click', exportToCSV);
   document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('saveEditBtn').addEventListener('click', saveEdit);
+  document.getElementById('cancelEditBtn').addEventListener('click', () => document.getElementById('editModal').style.display = 'none');
 
   loadVehicles(1);
+  loadStats();
 </script>
 </body>
 </html>
