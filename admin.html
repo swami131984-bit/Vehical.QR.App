@@ -241,7 +241,26 @@
   }
   function viewQR(url) { currentQrUrl = url; currentQrImageSrc = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=250&margin=2`; document.getElementById('qrImage').innerHTML = `<img src="${currentQrImageSrc}" style="width:180px">`; document.getElementById('qrResult').style.display = 'block'; showToast('QR loaded'); }
   function copyToClipboard(text) { navigator.clipboard.writeText(text); showToast('📋 URL copied'); }
-  function downloadQR() { if (currentQrImageSrc) { let a = document.createElement('a'); a.download = 'vehicle_qr.png'; a.href = currentQrImageSrc; a.click(); } else showToast('Generate a QR first'); }
+  // FIXED DOWNLOAD (fetch blob to force download)
+  async function downloadQR() {
+    if (!currentQrImageSrc) { showToast('Generate a QR first'); return; }
+    try {
+      showToast('Preparing download...');
+      const response = await fetch(currentQrImageSrc);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'vehicle_qr.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('✅ QR downloaded');
+    } catch (err) {
+      showToast('Download failed: ' + err.message);
+    }
+  }
   function printQR() {
     if (!currentQrImageSrc) { showToast('Generate a QR first'); return; }
     const printWindow = window.open('', '_blank');
@@ -249,11 +268,7 @@
       <!DOCTYPE html>
       <html>
       <head><title>Print QR Code</title>
-      <style>
-        body { margin:0; padding:20px; display:flex; justify-content:center; align-items:center; min-height:100vh; background:white; }
-        img { max-width:280px; height:auto; border:1px solid #ddd; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-        @media print { body { margin:0; padding:0; } img { box-shadow:none; border:none; } }
-      </style>
+      <style>body{margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh;background:white;}img{max-width:280px;height:auto;border:1px solid #ddd;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}@media print{body{margin:0;padding:0;}img{box-shadow:none;border:none;}}</style>
       </head>
       <body><img src="${currentQrImageSrc}" alt="QR Code"></body>
       </html>
