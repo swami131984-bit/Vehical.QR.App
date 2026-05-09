@@ -52,9 +52,42 @@ app.post('/api/generate', (req, res) => {
   }
 });
 
-// List all vehicles
+// List all vehicles with pagination
 app.get('/api/vehicles', (req, res) => {
-  res.json(vehicles);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const start = (page - 1) * limit;
+  const end = start + limit;
+  const paginatedVehicles = vehicles.slice(start, end);
+  res.json({
+    vehicles: paginatedVehicles,
+    total: vehicles.length,
+    page,
+    totalPages: Math.ceil(vehicles.length / limit)
+  });
+});
+
+// UPDATE vehicle by id (edit)
+app.put('/api/vehicles/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { vehicleNumber, ownerName, phoneNumber } = req.body;
+    const index = vehicles.findIndex(v => v.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    // Update fields, keep QR data unchanged
+    vehicles[index] = {
+      ...vehicles[index],
+      vehicleNumber,
+      ownerName,
+      phoneNumber
+    };
+    res.json({ success: true, vehicle: vehicles[index] });
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).json({ error: 'Update failed' });
+  }
 });
 
 // DELETE vehicle by id
@@ -73,7 +106,7 @@ app.delete('/api/vehicles/:id', (req, res) => {
     }
 });
 
-// ========== QR SCAN PAGE (elegant) ==========
+// ========== QR SCAN PAGE (unchanged) ==========
 app.get('/vehicle/:qrid', (req, res) => {
   const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
   if (!vehicle) {
@@ -88,7 +121,6 @@ app.get('/vehicle/:qrid', (req, res) => {
     `);
   }
 
-  // Elegant scan page HTML (your existing code – unchanged)
   const scanHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,7 +182,6 @@ app.get('/vehicle/:qrid', (req, res) => {
   res.send(scanHtml);
 });
 
-// Helper to escape HTML
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>]/g, function(m) {
@@ -169,7 +200,6 @@ app.get('/admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// ========== START SERVER ==========
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`👉 Open https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}`);
