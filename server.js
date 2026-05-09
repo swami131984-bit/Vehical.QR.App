@@ -1,24 +1,68 @@
 const express = require('express');
 const path = require('path');
+const nodemailer = require('nodemailer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Admin login (single password)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-app.post('/api/admin-login', (req, res) => {
-    const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
-        const token = Buffer.from(Date.now().toString()).toString('base64');
-        res.json({ success: true, token });
-    } else {
-        res.status(401).json({ error: 'Invalid password' });
+// ---------- Email 2FA storage ----------
+const codeStore = new Map();
+
+// ---------- Email transporter ----------
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
-// In-memory storage with scan counters
+// ---------- Admin login (step 1: send code) ----------
+app.post('/api/admin-login', async (req, res) => {
+    const { password } = req.body;
+    if (password !== process.env.ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Invalid password' });
+    }
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) {
+        return res.status(500).json({ error: 'Admin email not set' });
+    }
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+    codeStore.set(adminEmail, { code, expiresAt });
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: adminEmail,
+            subject: 'FleetQR Pro – Login Code',
+            html: `<p>Your verification code is: <strong>${code}</strong></p><p>Valid for 5 minutes.</p>`
+        });
+        res.json({ success: true, message: 'Code sent to your email' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to send email' });
+    }
+});
+
+// ---------- Step 2: verify code and issue token ----------
+app.post('/api/verify-code', (req, res) => {
+    const { code } = req.body;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const record = codeStore.get(adminEmail);
+    if (!record) return res.status(401).json({ error: 'No code requested or expired' });
+    if (Date.now() > record.expiresAt) {
+        codeStore.delete(adminEmail);
+        return res.status(401).json({ error: 'Code expired, login again' });
+    }
+    if (record.code !== code) return res.status(401).json({ error: 'Invalid code' });
+    codeStore.delete(adminEmail);
+    const token = Buffer.from(Date.now().toString()).toString('base64');
+    res.json({ success: true, token });
+});
+
+// ---------- In-memory storage ----------
 let vehicles = [];
 let nextId = 1;
 
@@ -66,7 +110,7 @@ app.get('/api/stats', (req, res) => {
     res.json({ total, createdToday });
 });
 
-// Generate QR (initialises scan counter)
+// Generate QR (with country code)
 app.post('/api/generate', (req, res) => {
     try {
         const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
@@ -87,8 +131,8 @@ app.post('/api/generate', (req, res) => {
             qrData,
             qrUrl,
             createdAt: new Date(),
-            scans: 0,               // 👈 new: scan counter
-            lastScannedAt: null    // 👈 new: last scan timestamp
+            scans: 0,
+            lastScannedAt: null
         };
         vehicles.push(newVehicle);
         res.json({ success: true, qrData, qrUrl });
@@ -98,14 +142,13 @@ app.post('/api/generate', (req, res) => {
     }
 });
 
-// Update vehicle (edit) – preserve scan data
+// Update vehicle (edit)
 app.put('/api/vehicles/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
         const index = vehicles.findIndex(v => v.id === id);
         if (index === -1) return res.status(404).json({ error: 'Not found' });
-        // keep existing scans and lastScannedAt
         vehicles[index] = {
             ...vehicles[index],
             vehicleNumber,
@@ -135,14 +178,12 @@ app.delete('/api/vehicles/:id', (req, res) => {
     }
 });
 
-// QR scan page – increment scan counter and record last scan time
+// QR scan page – increment scan counter and last seen
 app.get('/vehicle/:qrid', (req, res) => {
     const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
     if (!vehicle) {
         return res.status(404).send('<h1>❌ Vehicle not found</h1>');
     }
-
-    // ✨ ANALYTICS: increment scan counter, update last scanned timestamp
     vehicle.scans = (vehicle.scans || 0) + 1;
     vehicle.lastScannedAt = new Date();
 
