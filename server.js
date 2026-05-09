@@ -5,21 +5,19 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static(__dirname)); // serves static files like admin.html
+app.use(express.static(__dirname));
 
 // Simple admin login (single user)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';  // change this or set env variable
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 app.post('/api/admin-login', (req, res) => {
     const { password } = req.body;
     if (password === ADMIN_PASSWORD) {
-        // Generate a simple token (you can just use a random string)
         const token = Buffer.from(Date.now().toString()).toString('base64');
         res.json({ success: true, token });
     } else {
         res.status(401).json({ error: 'Invalid password' });
     }
 });
-
 
 // In-memory storage (reset each deploy)
 let vehicles = [];
@@ -59,6 +57,22 @@ app.get('/api/vehicles', (req, res) => {
   res.json(vehicles);
 });
 
+// DELETE vehicle by id
+app.delete('/api/vehicles/:id', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const index = vehicles.findIndex(v => v.id === id);
+        if (index === -1) {
+            return res.status(404).json({ error: 'Vehicle not found' });
+        }
+        vehicles.splice(index, 1);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Delete error:', err);
+        res.status(500).json({ error: 'Delete failed' });
+    }
+});
+
 // ========== QR SCAN PAGE (elegant) ==========
 app.get('/vehicle/:qrid', (req, res) => {
   const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
@@ -74,7 +88,7 @@ app.get('/vehicle/:qrid', (req, res) => {
     `);
   }
 
-  // Elegant scan page HTML
+  // Elegant scan page HTML (your existing code – unchanged)
   const scanHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,12 +162,9 @@ function escapeHtml(str) {
 }
 
 // ========== FRONTEND ROUTES ==========
-// Serve admin.html at root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
-
-// Explicit route for admin.html
 app.get('/admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
