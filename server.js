@@ -18,11 +18,11 @@ app.post('/api/admin-login', (req, res) => {
     }
 });
 
-// In-memory storage
+// In-memory storage with scan counters
 let vehicles = [];
 let nextId = 1;
 
-// Helper: filter vehicles by search term (case‑insensitive)
+// Helper: filter vehicles by search term
 function filterVehicles(vehiclesArray, searchTerm) {
     if (!searchTerm) return vehiclesArray;
     const term = searchTerm.toLowerCase();
@@ -34,12 +34,11 @@ function filterVehicles(vehiclesArray, searchTerm) {
     );
 }
 
-// API: get vehicles with pagination and optional search
+// API: get vehicles with pagination and search
 app.get('/api/vehicles', (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
-
     let filtered = filterVehicles(vehicles, search);
     const total = filtered.length;
     const start = (page - 1) * limit;
@@ -54,7 +53,7 @@ app.get('/api/vehicles', (req, res) => {
     });
 });
 
-// Statistics (total & today) – search‑independent
+// Statistics (total & today)
 app.get('/api/stats', (req, res) => {
     const total = vehicles.length;
     const today = new Date();
@@ -67,7 +66,7 @@ app.get('/api/stats', (req, res) => {
     res.json({ total, createdToday });
 });
 
-// Generate QR (unchanged)
+// Generate QR (initialises scan counter)
 app.post('/api/generate', (req, res) => {
     try {
         const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
@@ -87,7 +86,9 @@ app.post('/api/generate', (req, res) => {
             fullPhoneNumber,
             qrData,
             qrUrl,
-            createdAt: new Date()
+            createdAt: new Date(),
+            scans: 0,               // 👈 new: scan counter
+            lastScannedAt: null    // 👈 new: last scan timestamp
         };
         vehicles.push(newVehicle);
         res.json({ success: true, qrData, qrUrl });
@@ -97,13 +98,14 @@ app.post('/api/generate', (req, res) => {
     }
 });
 
-// Update vehicle (edit)
+// Update vehicle (edit) – preserve scan data
 app.put('/api/vehicles/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const { vehicleNumber, ownerName, countryCode, phoneNumber } = req.body;
         const index = vehicles.findIndex(v => v.id === id);
         if (index === -1) return res.status(404).json({ error: 'Not found' });
+        // keep existing scans and lastScannedAt
         vehicles[index] = {
             ...vehicles[index],
             vehicleNumber,
@@ -133,12 +135,17 @@ app.delete('/api/vehicles/:id', (req, res) => {
     }
 });
 
-// QR scan page (unchanged)
+// QR scan page – increment scan counter and record last scan time
 app.get('/vehicle/:qrid', (req, res) => {
     const vehicle = vehicles.find(v => v.qrData === req.params.qrid);
     if (!vehicle) {
         return res.status(404).send('<h1>❌ Vehicle not found</h1>');
     }
+
+    // ✨ ANALYTICS: increment scan counter, update last scanned timestamp
+    vehicle.scans = (vehicle.scans || 0) + 1;
+    vehicle.lastScannedAt = new Date();
+
     const fullNumber = vehicle.fullPhoneNumber || `${vehicle.countryCode}${vehicle.phoneNumber}`;
     const html = `<!DOCTYPE html>
 <html>
@@ -182,7 +189,7 @@ h1{font-size:1.8rem;color:white;margin:0.5rem 0 0.25rem;}
 <a href="sms:${escapeHtml(fullNumber)}" class="btn btn-sms"><i class="fas fa-comment"></i> SMS</a>
 <a href="https://wa.me/${fullNumber.replace(/[^0-9]/g, '')}" class="btn btn-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
 </div>
-<div class="footer"><i class="fas fa-shield-alt"></i> Secure QR • Report if found</div>
+<div class="footer"><i class="fas fa-shield-alt"></i> Secure QR · Report if found</div>
 </div>
 </div>
 </body>
