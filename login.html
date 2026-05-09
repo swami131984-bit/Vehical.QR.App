@@ -6,7 +6,11 @@
     <title>FleetQR Pro – Admin Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at 10% 20%, #0f172a, #0a0f1c);
@@ -19,10 +23,10 @@
         .card {
             max-width: 450px;
             width: 100%;
-            background: rgba(15,23,42,0.7);
+            background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(16px);
             border-radius: 2rem;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 2rem;
         }
         h1 {
@@ -53,6 +57,11 @@
             color: white;
             cursor: pointer;
             font-size: 1rem;
+            transition: 0.2s;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         .error {
             color: #f87171;
@@ -60,26 +69,44 @@
             text-align: center;
             font-size: 0.9rem;
         }
+        .hidden {
+            display: none;
+        }
+        .info {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
 <div class="card">
     <h1>🔐 FleetQR Pro Admin</h1>
-    <input type="password" id="adminPassword" placeholder="Enter admin password">
-    <button onclick="login()">Login</button>
+    <div id="step1">
+        <input type="password" id="adminPassword" placeholder="Admin password">
+        <button onclick="sendCode()">Login</button>
+    </div>
+    <div id="step2" class="hidden">
+        <input type="text" id="verificationCode" placeholder="6‑digit code from email">
+        <button onclick="verifyCode()">Verify Code</button>
+        <div class="info">Check your email for the verification code</div>
+    </div>
     <div id="errorMsg" class="error"></div>
 </div>
 
 <script>
-    async function login() {
+    async function sendCode() {
         const password = document.getElementById('adminPassword').value;
         const errorDiv = document.getElementById('errorMsg');
-
         if (!password) {
             errorDiv.innerText = 'Password required';
             return;
         }
-
+        errorDiv.innerText = '';
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = 'Sending code...';
         try {
             const res = await fetch('/api/admin-login', {
                 method: 'POST',
@@ -88,13 +115,51 @@
             });
             const data = await res.json();
             if (data.success) {
-                localStorage.setItem('admin_token', data.token);
-                window.location.href = '/admin.html';
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                errorDiv.innerText = '';
             } else {
-                errorDiv.innerText = data.error || 'Wrong password';
+                errorDiv.innerText = data.error || 'Login failed';
+                btn.disabled = false;
+                btn.innerText = 'Login';
             }
         } catch (err) {
             errorDiv.innerText = 'Network error';
+            btn.disabled = false;
+            btn.innerText = 'Login';
+        }
+    }
+
+    async function verifyCode() {
+        const code = document.getElementById('verificationCode').value;
+        const errorDiv = document.getElementById('errorMsg');
+        if (!code) {
+            errorDiv.innerText = 'Verification code required';
+            return;
+        }
+        errorDiv.innerText = '';
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = 'Verifying...';
+        try {
+            const res = await fetch('/api/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('admin_token', data.token);
+                window.location.href = '/admin.html';
+            } else {
+                errorDiv.innerText = data.error || 'Invalid code';
+                btn.disabled = false;
+                btn.innerText = 'Verify Code';
+            }
+        } catch (err) {
+            errorDiv.innerText = 'Network error';
+            btn.disabled = false;
+            btn.innerText = 'Verify Code';
         }
     }
 </script>
