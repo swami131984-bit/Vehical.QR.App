@@ -245,6 +245,12 @@
 </div>
 <div id="toast" class="toast">✨ QR generated!</div>
 
+ // Check admin authentication
+const token = localStorage.getItem('admin_token');
+if (!token) {
+    window.location.href = '/login.html';
+} 
+  
 <script>
   let currentQrUrl = '';
   let currentQrImageSrc = '';
