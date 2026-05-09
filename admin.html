@@ -21,9 +21,9 @@
     label { display:block; margin-bottom:0.5rem; font-weight:500; color:#cbd5e1; }
     input, select { width:100%; padding:1rem; background:#0f172a; border:1px solid #334155; border-radius:1rem; color:white; font-size:1rem; transition:all 0.2s; }
     input:focus, select:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.3); }
-    .phone-group { display:flex; gap:0.5rem; }
-    .phone-group select { width:30%; }
-    .phone-group input { width:70%; }
+    .phone-group { display:flex; gap:0.5rem; align-items:center; }
+    .phone-group select, .phone-group input[type="text"] { width:35%; }
+    .phone-group input[type="tel"] { width:65%; }
     button { background:linear-gradient(95deg,#3b82f6,#8b5cf6); width:100%; padding:1rem; border:none; border-radius:1.5rem; font-weight:600; font-size:1rem; color:white; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
     button:hover { transform:scale(1.02); box-shadow:0 10px 20px -5px #3b82f6; }
     .qr-result { background:#0f172a; border-radius:1.5rem; padding:1.5rem; margin-top:1.8rem; text-align:center; border:1px solid #2d3748; }
@@ -71,29 +71,14 @@
       <div class="form-group">
         <label><i class="fas fa-phone-alt"></i> Phone Number</label>
         <div class="phone-group">
-          <select id="countryCode">
-            <option value="+1">🇺🇸 +1 (US/CA)</option>
-            <option value="+44">🇬🇧 +44 (UK)</option>
-            <option value="+91" selected>🇮🇳 +91 (India)</option>
-            <option value="+61">🇦🇺 +61 (Australia)</option>
-            <option value="+86">🇨🇳 +86 (China)</option>
-            <option value="+81">🇯🇵 +81 (Japan)</option>
-            <option value="+49">🇩🇪 +49 (Germany)</option>
-            <option value="+33">🇫🇷 +33 (France)</option>
-            <option value="+34">🇪🇸 +34 (Spain)</option>
-            <option value="+39">🇮🇹 +39 (Italy)</option>
-            <option value="+55">🇧🇷 +55 (Brazil)</option>
-            <option value="+52">🇲🇽 +52 (Mexico)</option>
+          <select id="countryCodeSelect">
+            <option value="+374">🇦🇲 +374 (Armenia)</option>
             <option value="+7">🇷🇺 +7 (Russia)</option>
-            <option value="+20">🇪🇬 +20 (Egypt)</option>
-            <option value="+27">🇿🇦 +27 (South Africa)</option>
-            <option value="+82">🇰🇷 +82 (Korea)</option>
-            <option value="+966">🇸🇦 +966 (Saudi)</option>
-            <option value="+971">🇦🇪 +971 (UAE)</option>
-            <option value="+65">🇸🇬 +65 (Singapore)</option>
-            <option value="+60">🇲🇾 +60 (Malaysia)</option>
+            <option value="+995">🇬🇪 +995 (Georgia)</option>
+            <option value="__MANUAL__">✏️ Manual (type code)</option>
           </select>
-          <input type="text" id="phoneNumber" placeholder="e.g., 9876543210" autocomplete="off">
+          <input type="text" id="manualCountryCode" placeholder="e.g., +1" style="display:none;">
+          <input type="tel" id="phoneNumber" placeholder="Local number (e.g., 9876543210)" autocomplete="off">
         </div>
       </div>
       <button id="generateBtn"><i class="fas fa-magic"></i> Generate QR Code</button>
@@ -108,7 +93,7 @@
       </div>
     </div>
 
-    <!-- Right: Vehicle Gallery with Export, Pagination, Edit, Delete -->
+    <!-- Right: Vehicle Gallery -->
     <div class="card">
       <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
         <span><i class="fas fa-list-ul"></i> Active Stickers</span>
@@ -136,7 +121,13 @@
     <input type="text" id="editVehicleNumber" placeholder="Vehicle Number">
     <input type="text" id="editOwnerName" placeholder="Owner Name">
     <div class="phone-group">
-      <select id="editCountryCode"></select>
+      <select id="editCountryCodeSelect">
+        <option value="+374">🇦🇲 +374 (Armenia)</option>
+        <option value="+7">🇷🇺 +7 (Russia)</option>
+        <option value="+995">🇬🇪 +995 (Georgia)</option>
+        <option value="__MANUAL__">✏️ Manual (type code)</option>
+      </select>
+      <input type="text" id="editManualCountryCode" placeholder="e.g., +1" style="display:none;">
       <input type="text" id="editPhoneNumber" placeholder="Phone number">
     </div>
     <div class="modal-buttons">
@@ -155,46 +146,40 @@
     window.location.href = '/login.html';
   }
 
-  // Populate country code dropdowns (same as main form)
-  const countryOptions = [
-    { code: "+1", name: "🇺🇸 +1 (US/CA)" },
-    { code: "+44", name: "🇬🇧 +44 (UK)" },
-    { code: "+91", name: "🇮🇳 +91 (India)" },
-    { code: "+61", name: "🇦🇺 +61 (Australia)" },
-    { code: "+86", name: "🇨🇳 +86 (China)" },
-    { code: "+81", name: "🇯🇵 +81 (Japan)" },
-    { code: "+49", name: "🇩🇪 +49 (Germany)" },
-    { code: "+33", name: "🇫🇷 +33 (France)" },
-    { code: "+34", name: "🇪🇸 +34 (Spain)" },
-    { code: "+39", name: "🇮🇹 +39 (Italy)" },
-    { code: "+55", name: "🇧🇷 +55 (Brazil)" },
-    { code: "+52", name: "🇲🇽 +52 (Mexico)" },
-    { code: "+7", name: "🇷🇺 +7 (Russia)" },
-    { code: "+20", name: "🇪🇬 +20 (Egypt)" },
-    { code: "+27", name: "🇿🇦 +27 (South Africa)" },
-    { code: "+82", name: "🇰🇷 +82 (Korea)" },
-    { code: "+966", name: "🇸🇦 +966 (Saudi)" },
-    { code: "+971", name: "🇦🇪 +971 (UAE)" },
-    { code: "+65", name: "🇸🇬 +65 (Singapore)" },
-    { code: "+60", name: "🇲🇾 +60 (Malaysia)" },
-  ];
-
-  function populateCountryDropdown(selectElement, selectedValue = "+91") {
-    selectElement.innerHTML = '';
-    countryOptions.forEach(opt => {
-      const option = document.createElement('option');
-      option.value = opt.code;
-      option.textContent = opt.name;
-      if (opt.code === selectedValue) option.selected = true;
-      selectElement.appendChild(option);
-    });
+  // Helper for country code input (show/hide manual field)
+  function setupCountryCodeToggling(selectId, manualInputId) {
+    const select = document.getElementById(selectId);
+    const manualInput = document.getElementById(manualInputId);
+    if (!select || !manualInput) return;
+    function update() {
+      if (select.value === '__MANUAL__') {
+        manualInput.style.display = 'block';
+        manualInput.required = true;
+      } else {
+        manualInput.style.display = 'none';
+        manualInput.required = false;
+        manualInput.value = '';
+      }
+    }
+    select.addEventListener('change', update);
+    update();
   }
 
-  // Populate the main country code dropdown
-  populateCountryDropdown(document.getElementById('countryCode'), '+91');
-  // Also prepare edit dropdown (will be filled when modal opens)
-  const editCountrySelect = document.getElementById('editCountryCode');
-  populateCountryDropdown(editCountrySelect, '+91');
+  // Main form toggling
+  setupCountryCodeToggling('countryCodeSelect', 'manualCountryCode');
+  // Edit modal toggling
+  setupCountryCodeToggling('editCountryCodeSelect', 'editManualCountryCode');
+
+  // Function to get the actual country code value (from dropdown or manual)
+  function getSelectedCountryCode(selectId, manualInputId) {
+    const select = document.getElementById(selectId);
+    const manualInput = document.getElementById(manualInputId);
+    if (select.value === '__MANUAL__') {
+      return manualInput.value.trim();
+    } else {
+      return select.value;
+    }
+  }
 
   let currentQrUrl = '';
   let currentQrImageSrc = '';
@@ -264,16 +249,29 @@
     document.getElementById('editVehicleNumber').value = vehicleNumber;
     document.getElementById('editOwnerName').value = ownerName;
     document.getElementById('editPhoneNumber').value = phoneNumber;
-    // Set the country code dropdown to the stored value
-    populateCountryDropdown(editCountrySelect, countryCode);
+
+    // Set the country code dropdown or manual input
+    const editSelect = document.getElementById('editCountryCodeSelect');
+    const editManual = document.getElementById('editManualCountryCode');
+    // Check if countryCode matches any of the predefined values
+    const predefined = ['+374', '+7', '+995'];
+    if (predefined.includes(countryCode)) {
+      editSelect.value = countryCode;
+      editManual.style.display = 'none';
+      editManual.value = '';
+    } else {
+      editSelect.value = '__MANUAL__';
+      editManual.style.display = 'block';
+      editManual.value = countryCode;
+    }
     document.getElementById('editModal').style.display = 'flex';
   }
 
   async function saveEdit() {
     const vehicleNumber = document.getElementById('editVehicleNumber').value.trim();
     const ownerName = document.getElementById('editOwnerName').value.trim();
-    const countryCode = document.getElementById('editCountryCode').value;
     const phoneNumber = document.getElementById('editPhoneNumber').value.trim();
+    let countryCode = getSelectedCountryCode('editCountryCodeSelect', 'editManualCountryCode');
     if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
       showToast('All fields required');
       return;
@@ -321,10 +319,10 @@
   async function generateQR() {
     const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
     const ownerName = document.getElementById('ownerName').value.trim();
-    const countryCode = document.getElementById('countryCode').value;
     const phoneNumber = document.getElementById('phoneNumber').value.trim();
-    if (!vehicleNumber || !ownerName || !phoneNumber) {
-      showToast('Vehicle number, owner name, and phone number are required');
+    let countryCode = getSelectedCountryCode('countryCodeSelect', 'manualCountryCode');
+    if (!vehicleNumber || !ownerName || !countryCode || !phoneNumber) {
+      showToast('Vehicle number, owner name, country code, and phone number are required');
       return;
     }
     const btn = document.getElementById('generateBtn');
@@ -346,6 +344,10 @@
         document.getElementById('vehicleNumber').value = '';
         document.getElementById('ownerName').value = '';
         document.getElementById('phoneNumber').value = '';
+        // Reset country code to default (Armenia)
+        document.getElementById('countryCodeSelect').value = '+374';
+        document.getElementById('manualCountryCode').style.display = 'none';
+        document.getElementById('manualCountryCode').value = '';
         loadVehicles(currentPage);
       } else {
         showToast('Error: ' + (data.error || 'unknown'));
