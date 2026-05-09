@@ -7,6 +7,20 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(__dirname)); // serves static files like admin.html
 
+// Simple admin login (single user)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';  // change this or set env variable
+app.post('/api/admin-login', (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+        // Generate a simple token (you can just use a random string)
+        const token = Buffer.from(Date.now().toString()).toString('base64');
+        res.json({ success: true, token });
+    } else {
+        res.status(401).json({ error: 'Invalid password' });
+    }
+});
+
+
 // In-memory storage (reset each deploy)
 let vehicles = [];
 let nextId = 1;
