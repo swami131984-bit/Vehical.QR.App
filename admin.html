@@ -73,7 +73,7 @@
       </div>
     </div>
 
-    <!-- Right: Vehicle Gallery with Export CSV button -->
+    <!-- Right: Vehicle Gallery with Export CSV button and Logout -->
     <div class="card">
       <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
         <span><i class="fas fa-list-ul"></i> Active Stickers</span>
@@ -81,6 +81,10 @@
       </div>
       <div id="vehicleList" class="vehicle-list">
         <div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-spinner fa-pulse"></i> Loading fleet...</div>
+      </div>
+      <!-- Logout button -->
+      <div style="margin-top: 1rem; text-align: right;">
+        <button id="logoutBtn" class="btn-icon" style="background: #dc2626; color: white; padding: 0.4rem 1rem; border-radius: 2rem;"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </div>
     </div>
   </div>
@@ -126,7 +130,10 @@
     const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
     const ownerName = document.getElementById('ownerName').value.trim();
     const phoneNumber = document.getElementById('phoneNumber').value.trim();
-    if (!vehicleNumber || !ownerName || !phoneNumber) return alert('Please fill all fields');
+    if (!vehicleNumber || !ownerName || !phoneNumber) {
+      showToast('Please fill all fields');
+      return;
+    }
 
     const btn = document.getElementById('generateBtn');
     btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generating...';
@@ -149,9 +156,12 @@
         document.getElementById('ownerName').value = '';
         document.getElementById('phoneNumber').value = '';
         loadVehicles();
-      } else alert('Error: ' + (data.error || 'unknown'));
-    } catch(err) { alert('Network error: ' + err.message); }
-    finally {
+      } else {
+        showToast('Error: ' + (data.error || 'unknown'));
+      }
+    } catch(err) {
+      showToast('Network error: ' + err.message);
+    } finally {
       btn.innerHTML = '<i class="fas fa-magic"></i> Generate QR Code';
       btn.disabled = false;
     }
@@ -176,7 +186,9 @@
       link.download = 'vehicle_qr.png';
       link.href = currentQrImageSrc;
       link.click();
-    } else alert('Generate a QR first');
+    } else {
+      showToast('Generate a QR first');
+    }
   }
 
   function showToast(msg) {
@@ -233,11 +245,21 @@
     }
   }
 
+  // Logout function
+  function logout() {
+    localStorage.removeItem('admin_token');
+    showToast('👋 Logged out');
+    setTimeout(() => {
+      window.location.href = '/login.html';
+    }, 500);
+  }
+
   // Event listeners
   document.getElementById('generateBtn').addEventListener('click', generateQR);
   document.getElementById('copyUrlBtn').addEventListener('click', () => copyToClipboard(currentQrUrl));
   document.getElementById('downloadQrBtn').addEventListener('click', downloadQR);
   document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+  document.getElementById('logoutBtn').addEventListener('click', logout);
 
   loadVehicles();
   setInterval(loadVehicles, 5000);
