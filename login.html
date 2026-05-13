@@ -59,11 +59,17 @@
         .card:hover {
             transform: translateY(-5px);
         }
+        /* Logo and title inline */
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
         .logo-img {
-            width: 80px;
+            width: 50px;
             height: auto;
-            margin-bottom: 1rem;
-            display: inline-block;
         }
         h1 {
             font-size: 2rem;
@@ -72,7 +78,7 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            margin-bottom: 0.5rem;
+            margin: 0;
         }
         .subtitle {
             color: #94a3b8;
@@ -153,15 +159,18 @@
         }
         @media (max-width: 500px) {
             .card { padding: 1.5rem; }
+            .brand { gap: 0.5rem; }
+            .logo-img { width: 40px; }
             h1 { font-size: 1.5rem; }
-            .logo-img { width: 60px; }
         }
     </style>
 </head>
 <body>
 <div class="card">
-    <img src="/motion.png" alt="Motion QR Logo" class="logo-img" onerror="this.style.display='none'">
-    <h1>Motion QR</h1>
+    <div class="brand">
+        <img src="/motion.png" alt="Motion QR Logo" class="logo-img" onerror="this.style.display='none'">
+        <h1>Motion QR</h1>
+    </div>
     <div class="subtitle">Secure admin access</div>
 
     <div class="input-group">
