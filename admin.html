@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>FleetQR Pro | Admin</title>
+  <title>Motion QR | Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -13,11 +13,13 @@
     .hero{text-align:center;margin-bottom:2rem;}
     .hero h1{font-size:2.8rem;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;}
     .hero p{color:#94a3b8;}
-    /* Logo style */
     .hero-logo {
         width: 80px;
         height: auto;
         margin-bottom: 1rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
     .dashboard{display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
     .card{background:rgba(15,23,42,0.6);backdrop-filter:blur(16px);border-radius:2rem;border:1px solid rgba(255,255,255,0.1);padding:2rem;transition:transform 0.2s;}
@@ -66,9 +68,9 @@
 <body>
 <div class="container">
   <div class="hero">
-    <!-- Logo image added here -->
-    <img src="/logo.png" alt="FleetQR Pro Logo" class="hero-logo" onerror="this.style.display='none'">
-    <h1><i class="fas fa-qrcode"></i> FleetQR Pro</h1>
+    <!-- Logo image using motion.png -->
+    <img src="/motion.png" alt="Motion QR Logo" class="hero-logo" onerror="this.style.display='none'">
+    <h1>Motion QR</h1>
     <p>Generate, search, edit, and manage QR stickers</p>
   </div>
   <div class="dashboard">
@@ -78,7 +80,12 @@
       <div class="form-group"><label><i class="fas fa-user"></i> Owner Name</label><input type="text" id="ownerName" placeholder="Full name"></div>
       <div class="form-group"><label><i class="fas fa-phone-alt"></i> Phone Number</label>
         <div class="phone-group">
-          <select id="countryCodeSelect"><option value="+374">🇦🇲 +374 (Armenia)</option><option value="+7">🇷🇺 +7 (Russia)</option><option value="+995">🇬🇪 +995 (Georgia)</option><option value="__MANUAL__">✏️ Manual</option></select>
+          <select id="countryCodeSelect">
+            <option value="+374">🇦🇲 +374 (Armenia)</option>
+            <option value="+7">🇷🇺 +7 (Russia)</option>
+            <option value="+995">🇬🇪 +995 (Georgia)</option>
+            <option value="__MANUAL__">✏️ Manual</option>
+          </select>
           <input type="text" id="manualCountryCode" placeholder="e.g., +1" style="display:none;">
           <input type="tel" id="phoneNumber" placeholder="Local number">
         </div>
@@ -142,7 +149,7 @@
   function printQR(){ if(!currentQrImageSrc){ showToast('Generate a QR first'); return; } const w=window.open('','_blank'); w.document.write(`<!DOCTYPE html><html><head><title>Print QR Code</title><style>body{margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh;background:white;}img{max-width:280px;height:auto;border:1px solid #ddd;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}@media print{body{margin:0;padding:0;}img{box-shadow:none;border:none;}}</style></head><body><img src="${currentQrImageSrc}" alt="QR Code"></body></html>`); w.document.close(); w.print(); }
   function showToast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0,2000); }
   function escapeHtml(str){ return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':(m==='<'?'&lt;':'&gt;')); }
-  async function exportToCSV(){ try{ showToast('Preparing export...'); const r=await fetch('/api/vehicles?limit=10000&search='+encodeURIComponent(currentSearch)); const d=await r.json(); const v=d.vehicles||[]; if(!v.length){ showToast('No vehicles'); return; } const headers=['Vehicle Number','Owner Name','Phone Number','Scans','Last Scan','QR URL','Created At']; const rows=v.map(v=>[v.vehicleNumber, v.ownerName, `${v.countryCode}${v.phoneNumber}`, v.scans||0, v.lastScannedAt?new Date(v.lastScannedAt).toLocaleString():'', v.qrUrl, new Date(v.createdAt).toLocaleString()]); const csv=[headers.join(','), ...rows.map(row=>row.map(cell=>`"${cell}"`).join(','))].join('\n'); const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fleetqr_export_${new Date().toISOString().slice(0,19)}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast(`✅ Exported ${v.length} vehicles`); } catch(e){ showToast('Export failed'); } }
+  async function exportToCSV(){ try{ showToast('Preparing export...'); const r=await fetch('/api/vehicles?limit=10000&search='+encodeURIComponent(currentSearch)); const d=await r.json(); const v=d.vehicles||[]; if(!v.length){ showToast('No vehicles'); return; } const headers=['Vehicle Number','Owner Name','Phone Number','Scans','Last Scan','QR URL','Created At']; const rows=v.map(v=>[v.vehicleNumber, v.ownerName, `${v.countryCode}${v.phoneNumber}`, v.scans||0, v.lastScannedAt?new Date(v.lastScannedAt).toLocaleString():'', v.qrUrl, new Date(v.createdAt).toLocaleString()]); const csv=[headers.join(','), ...rows.map(row=>row.map(cell=>`"${cell}"`).join(','))].join('\n'); const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`motionqr_export_${new Date().toISOString().slice(0,19)}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast(`✅ Exported ${v.length} vehicles`); } catch(e){ showToast('Export failed'); } }
   function logout(){ localStorage.removeItem('admin_token'); showToast('Logged out'); setTimeout(()=>window.location.href='/login.html',500); }
   document.getElementById('generateBtn').addEventListener('click',generateQR);
   document.getElementById('copyUrlBtn').addEventListener('click',()=>copyToClipboard(currentQrUrl));
