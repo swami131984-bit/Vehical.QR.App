@@ -11,26 +11,15 @@
     body{font-family:'Inter',sans-serif;background:radial-gradient(circle at 10% 20%,#0f172a,#0a0f1c);min-height:100vh;padding:2rem;}
     .container{max-width:1300px;margin:0 auto;}
     .hero{text-align:center;margin-bottom:2rem;}
-    .hero p{color:#94a3b8;margin-top:0.5rem;}
-    .brand {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.8rem;
-        margin-bottom: 0.3rem;
-    }
-    .logo-img {
-        width: 55px;
+    .hero h1{font-size:2.8rem;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .hero p{color:#94a3b8;}
+    .hero-logo {
+        width: 80px;
         height: auto;
-    }
-    .hero h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #c084fc, #60a5fa);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        margin: 0;
+        margin-bottom: 1rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
     .dashboard{display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
     .card{background:rgba(15,23,42,0.6);backdrop-filter:blur(16px);border-radius:2rem;border:1px solid rgba(255,255,255,0.1);padding:2rem;transition:transform 0.2s;}
@@ -73,20 +62,104 @@
     .stat-item i{font-size:1.2rem;color:#60a5fa;}
     .stat-item span{color:#cbd5e1;font-size:0.8rem;}
     .stat-item strong{color:white;font-size:1rem;margin-left:0.25rem;}
-    @media (max-width:800px){.dashboard{grid-template-columns:1fr;}body{padding:1rem;}.hero .brand h1{font-size:2rem;}.logo-img{width:45px;}}
+    @media (max-width:800px){.dashboard{grid-template-columns:1fr;}body{padding:1rem;}.hero h1{font-size:2rem;}}
   </style>
 </head>
 <body>
 <div class="container">
   <div class="hero">
-    <div class="brand">
-      <img src="/motion.png" alt="Motion QR Logo" class="logo-img" onerror="this.style.display='none'">
-      <h1>Motion QR</h1>
-    </div>
+    <!-- Logo image using motion.png -->
+    <img src="/motion.png" alt="Motion QR Logo" class="hero-logo" onerror="this.style.display='none'">
+    <h1>Motion QR</h1>
     <p>Generate, search, edit, and manage QR stickers</p>
   </div>
-  <div class="dashboard"> ... (keep the rest of your admin panel exactly as before) ... </div>
+  <div class="dashboard">
+    <div class="card">
+      <div class="card-title"><i class="fas fa-plus-circle"></i> New Sticker</div>
+      <div class="form-group"><label><i class="fas fa-car"></i> Vehicle Number</label><input type="text" id="vehicleNumber" placeholder="e.g., MH12AB1234"></div>
+      <div class="form-group"><label><i class="fas fa-user"></i> Owner Name</label><input type="text" id="ownerName" placeholder="Full name"></div>
+      <div class="form-group"><label><i class="fas fa-phone-alt"></i> Phone Number</label>
+        <div class="phone-group">
+          <select id="countryCodeSelect">
+            <option value="+374">🇦🇲 +374 (Armenia)</option>
+            <option value="+7">🇷🇺 +7 (Russia)</option>
+            <option value="+995">🇬🇪 +995 (Georgia)</option>
+            <option value="__MANUAL__">✏️ Manual</option>
+          </select>
+          <input type="text" id="manualCountryCode" placeholder="e.g., +1" style="display:none;">
+          <input type="tel" id="phoneNumber" placeholder="Local number">
+        </div>
+      </div>
+      <button id="generateBtn"><i class="fas fa-magic"></i> Generate QR Code</button>
+      <div id="qrResult" style="display:none" class="qr-result"><h3><i class="fas fa-check-circle" style="color:#10b981"></i> QR Ready</h3><div id="qrImage" class="qr-code"></div><div class="qr-actions"><button id="copyUrlBtn"><i class="fas fa-copy"></i> Copy URL</button><button id="downloadQrBtn"><i class="fas fa-download"></i> Download PNG</button><button id="printQrBtn"><i class="fas fa-print"></i> Print QR</button></div><p style="font-size:0.8rem;margin-top:12px"><i class="fas fa-shield-alt"></i> Waterproof ready</p></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span><i class="fas fa-list-ul"></i> Active Stickers</span>
+        <button id="exportBtn" class="btn-icon" style="background:#1E293B; padding:0.4rem 1rem; border-radius:2rem;"><i class="fas fa-download"></i> Export CSV</button>
+      </div>
+      <div class="search-container"><input type="text" id="searchInput" placeholder="🔍 Search by vehicle number, owner name, or phone number..."><button id="clearSearchBtn" class="btn-icon" style="background:#1E293B; padding:0 1rem;">✖ Clear</button></div>
+      <div id="vehicleList" class="vehicle-list"><div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-spinner fa-pulse"></i> Loading fleet...</div></div>
+      <div class="pagination" id="paginationControls" style="display:none;"><button id="prevPageBtn"><i class="fas fa-chevron-left"></i> Previous</button><span id="pageInfo" style="color:#cbd5e1;">Page 1 / 1</span><button id="nextPageBtn">Next <i class="fas fa-chevron-right"></i></button></div>
+      <div style="margin-top:1rem; text-align:right;"><button id="logoutBtn" class="btn-icon" style="background:#dc2626; color:white; padding:0.4rem 1rem; border-radius:2rem;"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+    </div>
+  </div>
+  <div class="stats-footer"><div class="stat-item"><i class="fas fa-qrcode"></i><span>Total QR codes:</span><strong id="totalQrCount">0</strong></div><div class="stat-item"><i class="fas fa-calendar-day"></i><span>Generated today:</span><strong id="todayQrCount">0</strong></div></div>
 </div>
-... (keep the rest of the HTML and scripts identical to your current version)
+<div id="editModal" class="modal"><div class="modal-content"><h3>✏️ Edit Vehicle</h3><input type="text" id="editVehicleNumber" placeholder="Vehicle Number"><input type="text" id="editOwnerName" placeholder="Owner Name"><div class="phone-group"><select id="editCountryCodeSelect"><option value="+374">🇦🇲 +374 (Armenia)</option><option value="+7">🇷🇺 +7 (Russia)</option><option value="+995">🇬🇪 +995 (Georgia)</option><option value="__MANUAL__">✏️ Manual</option></select><input type="text" id="editManualCountryCode" placeholder="e.g., +1" style="display:none;"><input type="text" id="editPhoneNumber" placeholder="Phone number"></div><div class="modal-buttons"><button id="saveEditBtn">Save Changes</button><button id="cancelEditBtn" style="background:#475569;">Cancel</button></div></div></div>
+<div id="toast" class="toast">✨ QR generated!</div>
+<script>
+  const token = localStorage.getItem('admin_token'); if (!token) window.location.href = '/login.html';
+  function setupCountryCodeToggling(selectId, manualInputId) {
+    const s=document.getElementById(selectId), m=document.getElementById(manualInputId);
+    if(!s||!m) return;
+    function u(){ if(s.value==='__MANUAL__'){ m.style.display='block'; m.required=true;} else { m.style.display='none'; m.required=false; m.value='';} }
+    s.addEventListener('change',u); u();
+  }
+  function getSelectedCountryCode(sId,mId){ const s=document.getElementById(sId), m=document.getElementById(mId); return s.value==='__MANUAL__' ? m.value.trim() : s.value; }
+  setupCountryCodeToggling('countryCodeSelect','manualCountryCode');
+  setupCountryCodeToggling('editCountryCodeSelect','editManualCountryCode');
+  let currentQrUrl='', currentQrImageSrc='', currentPage=1, totalPages=1, editingVehicleId=null, currentSearch='';
+  async function loadStats(){ try{ const r=await fetch('/api/stats'); const s=await r.json(); document.getElementById('totalQrCount').innerText=s.total; document.getElementById('todayQrCount').innerText=s.createdToday; } catch(e){}}
+  async function loadVehicles(page=1,search=currentSearch){
+    try{
+      const url=`/api/vehicles?page=${page}&limit=10&search=${encodeURIComponent(search)}`;
+      const r=await fetch(url); const d=await r.json();
+      totalPages=d.totalPages; currentPage=d.page; currentSearch=d.search||'';
+      renderVehicleList(d.vehicles); updatePagination();
+    } catch(e){}
+  }
+  function renderVehicleList(vehicles){
+    const c=document.getElementById('vehicleList');
+    if(!vehicles.length){ c.innerHTML='<div style="text-align:center; padding:2rem; color:#64748b"><i class="fas fa-car-side"></i> No matching stickers.</div>'; return; }
+    c.innerHTML=vehicles.map(v=>{ const scanInfo=v.scans?`🔄 ${v.scans} scan${v.scans!==1?'s':''}`:'🔄 Not scanned yet'; const lastScan=v.lastScannedAt?` • Last: ${new Date(v.lastScannedAt).toLocaleString()}`:''; return `<div class="vehicle-item"><div class="vehicle-info"><h4>${escapeHtml(v.vehicleNumber)}</h4><p>${escapeHtml(v.ownerName)} • ${escapeHtml(v.countryCode)}${escapeHtml(v.phoneNumber)}</p><div class="scan-stats"><i class="fas fa-chart-line"></i> ${scanInfo}${lastScan}</div><small>Created: ${new Date(v.createdAt).toLocaleDateString()}</small></div><div><button class="btn-icon" onclick="viewQR('${escapeHtml(v.qrUrl)}')" title="Show QR"><i class="fas fa-qrcode"></i></button><button class="btn-icon" onclick="copyToClipboard('${escapeHtml(v.qrUrl)}')" title="Copy URL"><i class="fas fa-copy"></i></button><button class="btn-icon" onclick="openEditModal(${v.id},'${escapeHtml(v.vehicleNumber)}','${escapeHtml(v.ownerName)}','${escapeHtml(v.countryCode)}','${escapeHtml(v.phoneNumber)}')" title="Edit"><i class="fas fa-pencil-alt"></i></button><button class="btn-icon" onclick="deleteVehicle(${v.id})" title="Delete" style="color:#ef4444;"><i class="fas fa-trash-alt"></i></button></div></div>`}).join('');
+  }
+  function updatePagination(){ const c=document.getElementById('paginationControls'); const p=document.getElementById('pageInfo'); if(totalPages<=1){ c.style.display='none'; return; } c.style.display='flex'; p.innerText=`Page ${currentPage} / ${totalPages}`; document.getElementById('prevPageBtn').disabled=(currentPage===1); document.getElementById('nextPageBtn').disabled=(currentPage===totalPages); }
+  document.getElementById('prevPageBtn')?.addEventListener('click',()=>{ if(currentPage>1) loadVehicles(currentPage-1); });
+  document.getElementById('nextPageBtn')?.addEventListener('click',()=>{ if(currentPage<totalPages) loadVehicles(currentPage+1); });
+  document.getElementById('searchInput')?.addEventListener('input',(e)=>{ currentSearch=e.target.value; loadVehicles(1,currentSearch); });
+  document.getElementById('clearSearchBtn')?.addEventListener('click',()=>{ document.getElementById('searchInput').value=''; currentSearch=''; loadVehicles(1,''); });
+  function openEditModal(id,vn,owner,cc,phone){ editingVehicleId=id; document.getElementById('editVehicleNumber').value=vn; document.getElementById('editOwnerName').value=owner; document.getElementById('editPhoneNumber').value=phone; const es=document.getElementById('editCountryCodeSelect'); const em=document.getElementById('editManualCountryCode'); const predefined=['+374','+7','+995']; if(predefined.includes(cc)){ es.value=cc; em.style.display='none'; em.value=''; } else { es.value='__MANUAL__'; em.style.display='block'; em.value=cc; } document.getElementById('editModal').style.display='flex'; }
+  async function saveEdit(){ const vn=document.getElementById('editVehicleNumber').value.trim(); const on=document.getElementById('editOwnerName').value.trim(); const pn=document.getElementById('editPhoneNumber').value.trim(); let cc=getSelectedCountryCode('editCountryCodeSelect','editManualCountryCode'); if(!vn||!on||!cc||!pn){ showToast('All fields required'); return; } try{ const r=await fetch(`/api/vehicles/${editingVehicleId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({vehicleNumber:vn,ownerName:on,countryCode:cc,phoneNumber:pn})}); const d=await r.json(); if(d.success){ showToast('✅ Vehicle updated'); document.getElementById('editModal').style.display='none'; loadVehicles(currentPage,currentSearch); loadStats(); } else showToast('Update failed'); } catch(err){ showToast('Network error'); } }
+  async function deleteVehicle(id){ if(!confirm('Permanently delete this sticker?')) return; try{ const r=await fetch(`/api/vehicles/${id}`,{method:'DELETE'}); const d=await r.json(); if(d.success){ showToast('🗑️ Deleted'); loadVehicles(currentPage,currentSearch); loadStats(); } else showToast('Delete failed'); } catch(err){ showToast('Network error'); } }
+  async function generateQR(){ const vn=document.getElementById('vehicleNumber').value.trim(); const on=document.getElementById('ownerName').value.trim(); const pn=document.getElementById('phoneNumber').value.trim(); let cc=getSelectedCountryCode('countryCodeSelect','manualCountryCode'); if(!vn||!on||!cc||!pn){ showToast('All fields required'); return; } const btn=document.getElementById('generateBtn'); btn.innerHTML='<i class="fas fa-spinner fa-pulse"></i> Generating...'; btn.disabled=true; try{ const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vehicleNumber:vn,ownerName:on,countryCode:cc,phoneNumber:pn})}); const d=await r.json(); if(d.success){ currentQrUrl=d.qrUrl; currentQrImageSrc=`https://quickchart.io/qr?text=${encodeURIComponent(currentQrUrl)}&size=250&margin=2`; document.getElementById('qrImage').innerHTML=`<img src="${currentQrImageSrc}" style="width:180px">`; document.getElementById('qrResult').style.display='block'; showToast('🎉 QR ready'); document.getElementById('vehicleNumber').value=''; document.getElementById('ownerName').value=''; document.getElementById('phoneNumber').value=''; document.getElementById('countryCodeSelect').value='+374'; document.getElementById('manualCountryCode').style.display='none'; document.getElementById('manualCountryCode').value=''; loadVehicles(currentPage,currentSearch); loadStats(); } else showToast('Error: '+(d.error||'unknown')); } catch(err){ showToast('Network error: '+err.message); } finally{ btn.innerHTML='<i class="fas fa-magic"></i> Generate QR Code'; btn.disabled=false; } }
+  function viewQR(url){ currentQrUrl=url; currentQrImageSrc=`https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=250&margin=2`; document.getElementById('qrImage').innerHTML=`<img src="${currentQrImageSrc}" style="width:180px">`; document.getElementById('qrResult').style.display='block'; showToast('QR loaded'); }
+  function copyToClipboard(text){ navigator.clipboard.writeText(text); showToast('📋 URL copied'); }
+  async function downloadQR(){ if(!currentQrImageSrc){ showToast('Generate a QR first'); return; } try{ showToast('Preparing download...'); const r=await fetch(currentQrImageSrc); const b=await r.blob(); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download='vehicle_qr.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); showToast('✅ QR downloaded'); } catch(err){ showToast('Download failed'); } }
+  function printQR(){ if(!currentQrImageSrc){ showToast('Generate a QR first'); return; } const w=window.open('','_blank'); w.document.write(`<!DOCTYPE html><html><head><title>Print QR Code</title><style>body{margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh;background:white;}img{max-width:280px;height:auto;border:1px solid #ddd;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}@media print{body{margin:0;padding:0;}img{box-shadow:none;border:none;}}</style></head><body><img src="${currentQrImageSrc}" alt="QR Code"></body></html>`); w.document.close(); w.print(); }
+  function showToast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0,2000); }
+  function escapeHtml(str){ return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':(m==='<'?'&lt;':'&gt;')); }
+  async function exportToCSV(){ try{ showToast('Preparing export...'); const r=await fetch('/api/vehicles?limit=10000&search='+encodeURIComponent(currentSearch)); const d=await r.json(); const v=d.vehicles||[]; if(!v.length){ showToast('No vehicles'); return; } const headers=['Vehicle Number','Owner Name','Phone Number','Scans','Last Scan','QR URL','Created At']; const rows=v.map(v=>[v.vehicleNumber, v.ownerName, `${v.countryCode}${v.phoneNumber}`, v.scans||0, v.lastScannedAt?new Date(v.lastScannedAt).toLocaleString():'', v.qrUrl, new Date(v.createdAt).toLocaleString()]); const csv=[headers.join(','), ...rows.map(row=>row.map(cell=>`"${cell}"`).join(','))].join('\n'); const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`motionqr_export_${new Date().toISOString().slice(0,19)}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast(`✅ Exported ${v.length} vehicles`); } catch(e){ showToast('Export failed'); } }
+  function logout(){ localStorage.removeItem('admin_token'); showToast('Logged out'); setTimeout(()=>window.location.href='/login.html',500); }
+  document.getElementById('generateBtn').addEventListener('click',generateQR);
+  document.getElementById('copyUrlBtn').addEventListener('click',()=>copyToClipboard(currentQrUrl));
+  document.getElementById('downloadQrBtn').addEventListener('click',downloadQR);
+  document.getElementById('printQrBtn').addEventListener('click',printQR);
+  document.getElementById('exportBtn').addEventListener('click',exportToCSV);
+  document.getElementById('logoutBtn').addEventListener('click',logout);
+  document.getElementById('saveEditBtn').addEventListener('click',saveEdit);
+  document.getElementById('cancelEditBtn').addEventListener('click',()=>document.getElementById('editModal').style.display='none');
+  loadVehicles(1); loadStats();
+</script>
 </body>
 </html>
